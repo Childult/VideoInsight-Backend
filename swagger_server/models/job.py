@@ -18,17 +18,17 @@ class Job(Model):
     def __init__(self, id: int=None, start_time: datetime=None, url: str=None, keywords: List[str]=None, status: str=None, url_type: str=None):  # noqa: E501
         """Job - a model defined in Swagger
 
-        :param id: The id of this Job.  # noqa: E501
+        :param id: The id of this Job.
         :type id: int
-        :param start_time: The start_time of this Job.  # noqa: E501
+        :param start_time: The start_time of this Job.
         :type start_time: datetime
         :param url: The url of this Job.  # noqa: E501
         :type url: str
-        :param keywords: The keywords of this Job.  # noqa: E501
+        :param keywords: The keywords of this Job.
         :type keywords: List[str]
-        :param status: The status of this Job.  # noqa: E501
+        :param status: The status of this Job.
         :type status: str
-        :param url_type: The url_type of this Job.  # noqa: E501
+        :param url_type: The url_type of this Job.
         :type url_type: str
         """
         self.swagger_types = {
@@ -62,7 +62,7 @@ class Job(Model):
 
         :param dikt: A dict.
         :type: dict
-        :return: The Job of this Job.  # noqa: E501
+        :return: The Job of this Job.
         :rtype: Job
         """
         return util.deserialize_model(dikt, cls)
@@ -70,7 +70,6 @@ class Job(Model):
     @property
     def id(self) -> int:
         """Gets the id of this Job.
-
 
         :return: The id of this Job.
         :rtype: int
@@ -80,7 +79,6 @@ class Job(Model):
     @id.setter
     def id(self, id: int):
         """Sets the id of this Job.
-
 
         :param id: The id of this Job.
         :type id: int
@@ -92,7 +90,6 @@ class Job(Model):
     def start_time(self) -> datetime:
         """Gets the start_time of this Job.
 
-
         :return: The start_time of this Job.
         :rtype: datetime
         """
@@ -101,7 +98,6 @@ class Job(Model):
     @start_time.setter
     def start_time(self, start_time: datetime):
         """Sets the start_time of this Job.
-
 
         :param start_time: The start_time of this Job.
         :type start_time: datetime
@@ -113,7 +109,6 @@ class Job(Model):
     def url(self) -> str:
         """Gets the url of this Job.
 
-
         :return: The url of this Job.
         :rtype: str
         """
@@ -122,7 +117,6 @@ class Job(Model):
     @url.setter
     def url(self, url: str):
         """Sets the url of this Job.
-
 
         :param url: The url of this Job.
         :type url: str
@@ -134,7 +128,6 @@ class Job(Model):
     def keywords(self) -> List[str]:
         """Gets the keywords of this Job.
 
-
         :return: The keywords of this Job.
         :rtype: List[str]
         """
@@ -143,7 +136,6 @@ class Job(Model):
     @keywords.setter
     def keywords(self, keywords: List[str]):
         """Sets the keywords of this Job.
-
 
         :param keywords: The keywords of this Job.
         :type keywords: List[str]
@@ -155,7 +147,7 @@ class Job(Model):
     def status(self) -> str:
         """Gets the status of this Job.
 
-        status of the job  # noqa: E501
+        status of the job
 
         :return: The status of this Job.
         :rtype: str
@@ -166,7 +158,7 @@ class Job(Model):
     def status(self, status: str):
         """Sets the status of this Job.
 
-        status of the job  # noqa: E501
+        status of the job
 
         :param status: The status of this Job.
         :type status: str
@@ -184,7 +176,7 @@ class Job(Model):
     def url_type(self) -> str:
         """Gets the url_type of this Job.
 
-        type of the url  # noqa: E501
+        type of the url
 
         :return: The url_type of this Job.
         :rtype: str
@@ -195,12 +187,12 @@ class Job(Model):
     def url_type(self, url_type: str):
         """Sets the url_type of this Job.
 
-        type of the url  # noqa: E501
+        type of the url
 
         :param url_type: The url_type of this Job.
         :type url_type: str
         """
-        allowed_values = ["live", "video"]  # noqa: E501
+        allowed_values = ["live", "video"]
         if url_type not in allowed_values:
             raise ValueError(
                 "Invalid value for `url_type` ({0}), must be one of {1}"

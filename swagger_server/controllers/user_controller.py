@@ -1,14 +1,14 @@
 import connexion
 import six
 
-from swagger_server.models.user import User  # noqa: E501
+from swagger_server.models.user import User
 from swagger_server import util
 
 
-def create_user(body):  # noqa: E501
+def create_user(body):
     """Create user
 
-    This can only be done by the logged in user. # noqa: E501
+    This can only be done by the logged in user.
 
     :param body: Created user object
     :type body: dict | bytes
@@ -16,14 +16,12 @@ def create_user(body):  # noqa: E501
     :rtype: None
     """
     if connexion.request.is_json:
-        body = User.from_dict(connexion.request.get_json())  # noqa: E501
+        body = User.from_dict(connexion.request.get_json())
     return 'do some magic!'
 
 
-def login_user(username, password):  # noqa: E501
+def login_user(username, password):
     """Logs user into the system
-
-     # noqa: E501
 
     :param username: The user name for login
     :type username: str
@@ -35,11 +33,8 @@ def login_user(username, password):  # noqa: E501
     return 'do some magic!'
 
 
-def logout_user():  # noqa: E501
+def logout_user():
     """Logs out current logged in user session
-
-     # noqa: E501
-
 
     :rtype: None
     """

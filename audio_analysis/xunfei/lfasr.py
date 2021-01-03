@@ -9,6 +9,8 @@ import time
 
 import requests
 
+from audio_analysis.config import Config
+
 lfasr_host = 'http://raasr.xfyun.cn/api'
 
 # 请求的接口名
@@ -21,7 +23,6 @@ api_get_result = '/getResult'
 file_piece_sice = 10485760
 
 # ——————————————————转写可配置参数————————————————
-# 参数可在官网界面（https://doc.xfyun.cn/rest_api/%E8%AF%AD%E9%9F%B3%E8%BD%AC%E5%86%99.html）查看，根据需求可自行在gene_params方法里添加修改
 # 转写类型
 lfasr_type = 0
 # 是否开启分词
@@ -196,11 +197,10 @@ class RequestApi(object):
         self.get_result_request(taskid=taskid)
 
 
-# 注意：如果出现requests模块报错："NoneType" object has no attribute 'read', 请尝试将requests模块更新到2.20.0或以上版本(本demo测试版本为2.20.0)
 # 输入讯飞开放平台的appid，secret_key和待转写的文件路径
 if __name__ == '__main__':
-    xf_api = RequestApi(appid="5fcc81f5", secret_key="818c465480f79a84b3d369e5d5c1c0c5",
-                        upload_file_path=r"/Users/hoshea/Downloads/test.mp3")
+    xf_api = RequestApi(appid=Config.app_id, secret_key=Config.secrete_key,
+                        upload_file_path=r"test.mp3")
     # api.all_api_request()
     taskid = '175db7134b6b44cabd175e1ca2ea2275'
 

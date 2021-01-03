@@ -2,7 +2,7 @@
 
 ## 目录结构
 
-- `swagger_server/`: flask server，由[swagger-codegen](https://github.com/swagger-api/swagger-codegen)生成
+- `swagger_server/`: flask server，由 [swagger-codegen](https://github.com/swagger-api/swagger-codegen) 生成
 - `audio_analysis/`: 音频分析模块
 - `text_analysis/`: 文本分析模块
 - `video_analysis/`: 视频分析模块

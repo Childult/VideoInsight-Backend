@@ -1,44 +1,47 @@
-import connexion
+from audio_analysis.api import audio_to_text
+from swagger_server.models.job import Job
+from text_analysis.api import text_summarize
+from video_analysis.api import extract_audio, extract_key_frame, video_summarize
+from video_getter.api import download_video
 
-from swagger_server.models.job import Job  # noqa: E501
 
-
-def add_job(body):  # noqa: E501
+def add_job(url):
     """Create a new job
 
-     # noqa: E501
-
-    :param body: Pet object that needs to be added to the store
-    :type body: dict | bytes
+    :param url: The url of the video
+    :type url: str
 
     :rtype: None
     """
-    if connexion.request.is_json:
-        body = Job.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    video_path = download_video(url)
+    audio_path = extract_audio(video_path)
+    audio_text = audio_to_text(audio_path)
+    text_sum = text_summarize(audio_text)
+    video_sum = extract_key_frame(video_summarize(video_path))
+    return 'Not implemented.'
 
 
-def find_jobs_by_status(status):  # noqa: E501
+def find_jobs_by_status(status):
     """Finds jobs by status
 
-    Multiple status values can be provided with comma separated strings # noqa: E501
+    Multiple status values can be provided with comma separated strings
 
     :param status: Status values that need to be considered for filter
     :type status: List[str]
 
     :rtype: List[Job]
     """
-    return 'do some magic!'
+    return 'Not implemented.'
 
 
-def get_job_by_id(jobId):  # noqa: E501
+def get_job_by_id(jobId):
     """Find job by ID
 
-    Returns a single job # noqa: E501
+    Returns a single job
 
     :param jobId: ID of job to return
     :type jobId: int
 
     :rtype: Job
     """
-    return 'do some magic!'
+    return 'Not implemented.'

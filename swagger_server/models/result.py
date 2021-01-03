@@ -18,15 +18,15 @@ class Result(Model):
     def __init__(self, id: int=None, audio: str=None, t_abstract: str=None, v_abstract: List[str]=None, v_text: str=None):  # noqa: E501
         """Result - a model defined in Swagger
 
-        :param id: The id of this Result.  # noqa: E501
+        :param id: The id of this Result.
         :type id: int
-        :param audio: The audio of this Result.  # noqa: E501
+        :param audio: The audio of this Result.
         :type audio: str
-        :param t_abstract: The t_abstract of this Result.  # noqa: E501
+        :param t_abstract: The t_abstract of this Result.
         :type t_abstract: str
-        :param v_abstract: The v_abstract of this Result.  # noqa: E501
+        :param v_abstract: The v_abstract of this Result.
         :type v_abstract: List[str]
-        :param v_text: The v_text of this Result.  # noqa: E501
+        :param v_text: The v_text of this Result.
         :type v_text: str
         """
         self.swagger_types = {
@@ -57,7 +57,7 @@ class Result(Model):
 
         :param dikt: A dict.
         :type: dict
-        :return: The Result of this Result.  # noqa: E501
+        :return: The Result of this Result.
         :rtype: Result
         """
         return util.deserialize_model(dikt, cls)
@@ -65,7 +65,6 @@ class Result(Model):
     @property
     def id(self) -> int:
         """Gets the id of this Result.
-
 
         :return: The id of this Result.
         :rtype: int
@@ -75,7 +74,6 @@ class Result(Model):
     @id.setter
     def id(self, id: int):
         """Sets the id of this Result.
-
 
         :param id: The id of this Result.
         :type id: int
@@ -87,7 +85,6 @@ class Result(Model):
     def audio(self) -> str:
         """Gets the audio of this Result.
 
-
         :return: The audio of this Result.
         :rtype: str
         """
@@ -96,7 +93,6 @@ class Result(Model):
     @audio.setter
     def audio(self, audio: str):
         """Sets the audio of this Result.
-
 
         :param audio: The audio of this Result.
         :type audio: str
@@ -108,7 +104,6 @@ class Result(Model):
     def t_abstract(self) -> str:
         """Gets the t_abstract of this Result.
 
-
         :return: The t_abstract of this Result.
         :rtype: str
         """
@@ -117,7 +112,6 @@ class Result(Model):
     @t_abstract.setter
     def t_abstract(self, t_abstract: str):
         """Sets the t_abstract of this Result.
-
 
         :param t_abstract: The t_abstract of this Result.
         :type t_abstract: str
@@ -129,7 +123,6 @@ class Result(Model):
     def v_abstract(self) -> List[str]:
         """Gets the v_abstract of this Result.
 
-
         :return: The v_abstract of this Result.
         :rtype: List[str]
         """
@@ -138,7 +131,6 @@ class Result(Model):
     @v_abstract.setter
     def v_abstract(self, v_abstract: List[str]):
         """Sets the v_abstract of this Result.
-
 
         :param v_abstract: The v_abstract of this Result.
         :type v_abstract: List[str]
@@ -150,7 +142,6 @@ class Result(Model):
     def v_text(self) -> str:
         """Gets the v_text of this Result.
 
-
         :return: The v_text of this Result.
         :rtype: str
         """
@@ -160,9 +151,7 @@ class Result(Model):
     def v_text(self, v_text: str):
         """Sets the v_text of this Result.
 
-
         :param v_text: The v_text of this Result.
         :type v_text: str
         """
-
         self._v_text = v_text

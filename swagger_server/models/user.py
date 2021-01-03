@@ -18,15 +18,15 @@ class User(Model):
     def __init__(self, id: int=None, username: str=None, email: str=None, password: str=None, phone: str=None):  # noqa: E501
         """User - a model defined in Swagger
 
-        :param id: The id of this User.  # noqa: E501
+        :param id: The id of this User.
         :type id: int
-        :param username: The username of this User.  # noqa: E501
+        :param username: The username of this User.
         :type username: str
-        :param email: The email of this User.  # noqa: E501
+        :param email: The email of this User.
         :type email: str
-        :param password: The password of this User.  # noqa: E501
+        :param password: The password of this User.
         :type password: str
-        :param phone: The phone of this User.  # noqa: E501
+        :param phone: The phone of this User.
         :type phone: str
         """
         self.swagger_types = {
@@ -57,7 +57,7 @@ class User(Model):
 
         :param dikt: A dict.
         :type: dict
-        :return: The User of this User.  # noqa: E501
+        :return: The User of this User.
         :rtype: User
         """
         return util.deserialize_model(dikt, cls)
@@ -65,7 +65,6 @@ class User(Model):
     @property
     def id(self) -> int:
         """Gets the id of this User.
-
 
         :return: The id of this User.
         :rtype: int
@@ -76,17 +75,14 @@ class User(Model):
     def id(self, id: int):
         """Sets the id of this User.
 
-
         :param id: The id of this User.
         :type id: int
         """
-
         self._id = id
 
     @property
     def username(self) -> str:
         """Gets the username of this User.
-
 
         :return: The username of this User.
         :rtype: str
@@ -97,17 +93,14 @@ class User(Model):
     def username(self, username: str):
         """Sets the username of this User.
 
-
         :param username: The username of this User.
         :type username: str
         """
-
         self._username = username
 
     @property
     def email(self) -> str:
         """Gets the email of this User.
-
 
         :return: The email of this User.
         :rtype: str
@@ -118,17 +111,14 @@ class User(Model):
     def email(self, email: str):
         """Sets the email of this User.
 
-
         :param email: The email of this User.
         :type email: str
         """
-
         self._email = email
 
     @property
     def password(self) -> str:
         """Gets the password of this User.
-
 
         :return: The password of this User.
         :rtype: str
@@ -139,17 +129,14 @@ class User(Model):
     def password(self, password: str):
         """Sets the password of this User.
 
-
         :param password: The password of this User.
         :type password: str
         """
-
         self._password = password
 
     @property
     def phone(self) -> str:
         """Gets the phone of this User.
-
 
         :return: The phone of this User.
         :rtype: str
@@ -160,9 +147,7 @@ class User(Model):
     def phone(self, phone: str):
         """Sets the phone of this User.
 
-
         :param phone: The phone of this User.
         :type phone: str
         """
-
         self._phone = phone

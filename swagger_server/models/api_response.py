@@ -18,11 +18,11 @@ class ApiResponse(Model):
     def __init__(self, code: int=None, type: str=None, message: str=None):  # noqa: E501
         """ApiResponse - a model defined in Swagger
 
-        :param code: The code of this ApiResponse.  # noqa: E501
+        :param code: The code of this ApiResponse.
         :type code: int
-        :param type: The type of this ApiResponse.  # noqa: E501
+        :param type: The type of this ApiResponse.
         :type type: str
-        :param message: The message of this ApiResponse.  # noqa: E501
+        :param message: The message of this ApiResponse.
         :type message: str
         """
         self.swagger_types = {
@@ -47,7 +47,7 @@ class ApiResponse(Model):
 
         :param dikt: A dict.
         :type: dict
-        :return: The ApiResponse of this ApiResponse.  # noqa: E501
+        :return: The ApiResponse of this ApiResponse.
         :rtype: ApiResponse
         """
         return util.deserialize_model(dikt, cls)
@@ -55,7 +55,6 @@ class ApiResponse(Model):
     @property
     def code(self) -> int:
         """Gets the code of this ApiResponse.
-
 
         :return: The code of this ApiResponse.
         :rtype: int
@@ -65,7 +64,6 @@ class ApiResponse(Model):
     @code.setter
     def code(self, code: int):
         """Sets the code of this ApiResponse.
-
 
         :param code: The code of this ApiResponse.
         :type code: int
@@ -77,7 +75,6 @@ class ApiResponse(Model):
     def type(self) -> str:
         """Gets the type of this ApiResponse.
 
-
         :return: The type of this ApiResponse.
         :rtype: str
         """
@@ -86,7 +83,6 @@ class ApiResponse(Model):
     @type.setter
     def type(self, type: str):
         """Sets the type of this ApiResponse.
-
 
         :param type: The type of this ApiResponse.
         :type type: str
@@ -98,7 +94,6 @@ class ApiResponse(Model):
     def message(self) -> str:
         """Gets the message of this ApiResponse.
 
-
         :return: The message of this ApiResponse.
         :rtype: str
         """
@@ -107,7 +102,6 @@ class ApiResponse(Model):
     @message.setter
     def message(self, message: str):
         """Sets the message of this ApiResponse.
-
 
         :param message: The message of this ApiResponse.
         :type message: str
