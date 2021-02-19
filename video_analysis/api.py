@@ -1,3 +1,5 @@
+import video_summary as vsumm
+
 def extract_key_frame(file: str) -> [str]:
     """
     提取视频中的关键帧
@@ -28,7 +30,7 @@ def scene_text_spotting(file: str) -> [str]:
 def video_summarize(file: str) -> str:
     """
     视频摘要
-    :param file: 视频文件路径
-    :return: 生成的视频路径
+    :param file: 视频文件路径 dataset/taichi.mp4
+    :return: 生成的视频路径 output/taichi.mp4
     """
-    return 'Not implemented.'
+    return vsumm.video_summarize_api(file)
