@@ -1,12 +1,13 @@
 import video_summary as vsumm
+import key_frame_extractor as keyframe_extractor
 
 def extract_key_frame(file: str) -> [str]:
     """
     提取视频中的关键帧
-    :param file: 视频所在路径
-    :return: 关键帧图片路径
+    :param file: 视频所在路径 dataset/taichi.mp4
+    :return: 关键帧图片路径 keyframes/taichi (taichi是视频文件名，关键帧在该路径下，如keyframes/taichi/keyframe_1.jpg)
     """
-    return ['Not implemented.']
+    return keyframe_extractor.extract_keyframes(file)
 
 
 def extract_audio(file: str) -> str:
