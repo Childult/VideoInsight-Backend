@@ -14,7 +14,7 @@ def extract_audio(file: str) -> str:
     """
     提取视频文件中的音频
     :param file: 视频所在路径
-    :return: 音频所在路径
+    :return: 音频文件名
     """
     return 'Not implemented.'
 
