@@ -7,4 +7,4 @@ def extract_audio(file):
         os.system('ffmpeg -i ' + file + ' -f mp3 -ar 16000 ' + title + '.mp3')
     except Exception as e:
         return "Error: {0}".format(str(e))
-    return title + '.aac'
+    return title + '.mp3'
