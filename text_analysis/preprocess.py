@@ -1,5 +1,4 @@
 import json
-import time
 
 from textrank4zh import TextRank4Sentence
 

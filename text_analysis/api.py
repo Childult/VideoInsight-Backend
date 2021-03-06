@@ -35,7 +35,7 @@ def text_summarize(text: str) -> str:
         for seg in sen_generator(text):
             # 每次取出长度不超过2000字符的段落进行摘要
             ret.append(auto_summarization(seg))
-        return ''.join(ret)
+            return ''.join(ret)
     except Exception as e:
         return str(e)
 
