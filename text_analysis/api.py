@@ -1,10 +1,41 @@
+import json
+
+from text_analysis.preprocess import remove_stopwords, sen_generator
+from text_analysis.tencent import auto_summarization
+
+
+def preprocess(json_str: str) -> str:
+    """
+    对讯飞语音转文本的结果进行预处理
+    :param json_str: json字符串
+    :return: 返回删除停用词的字符串
+    """
+    js = json.loads(json_str)
+    if js['ok'] == 0:
+        ret = []
+        for entry in js['data']:
+            text = entry.get('onebest')
+            if text:
+                ret.append(text.strip())
+        return remove_stopwords(''.join(ret))
+    else:
+        return ''
+
+
 def text_summarize(text: str) -> str:
     """
     文本摘要
-    :param text: 文本
+    :param text: 经过预处理后的文本
     :return: 摘要
     """
-    return 'Not implemented.'
+    try:
+        ret = []
+        for seg in sen_generator(text):
+            print(len(seg), seg)
+            ret.append(auto_summarization(seg))
+        return ''.join(ret)
+    except Exception as e:
+        return str(e)
 
 
 def cal_text_similarity(text_a, text_b: str) -> float:
