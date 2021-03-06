@@ -27,7 +27,8 @@ file_piece_sice = 10485760
 lfasr_type = 0
 # 是否开启分词
 has_participle = 'false'
-has_seperate = 'true'
+# 转写结果中是否包含发音人分离信息
+has_seperate = 'false'
 # 多候选词个数
 max_alternatives = 0
 # 子用户标识
@@ -56,13 +57,13 @@ class SliceIdGenerator:
 
 
 class RequestApi(object):
-    def __init__(self, appid, secret_key, upload_file_path):
-        self.appid = appid
-        self.secret_key = secret_key
+    def __init__(self, upload_file_path):
+        self.appid = Config.app_id
+        self.secret_key = Config.secrete_key
         self.upload_file_path = upload_file_path
 
     # 根据不同的apiname生成不同的参数,本示例中未使用全部参数您可在官网(https://doc.xfyun.cn/rest_api/%E8%AF%AD%E9%9F%B3%E8%BD%AC%E5%86%99.html)查看后选择适合业务场景的进行更换
-    def gene_params(self, apiname, taskid=None, slice_id=None):
+    def __generate_params(self, apiname, taskid=None, slice_id=None):
         appid = self.appid
         secret_key = self.secret_key
         upload_file_path = self.upload_file_path
@@ -110,24 +111,24 @@ class RequestApi(object):
         return param_dict
 
     # 请求和结果解析，结果中各个字段的含义可参考：https://doc.xfyun.cn/rest_api/%E8%AF%AD%E9%9F%B3%E8%BD%AC%E5%86%99.html
-    def gene_request(self, apiname, data, files=None, headers=None):
+    def __generate_request(self, apiname, data, files=None, headers=None) -> str:
         response = requests.post(lfasr_host + apiname, data=data, files=files, headers=headers)
         result = json.loads(response.text)
         if result["ok"] == 0:
-            print("{} success:".format(apiname) + str(result))
-            return result
+            # print("{} success:".format(apiname) + str(result))
+            return str(result)
         else:
-            print("{} error:".format(apiname) + str(result))
-            exit(0)
-            return result
+            # print("{} error:".format(apiname) + str(result))
+            # exit(0)
+            return str(result)
 
     # 预处理
-    def prepare_request(self):
-        return self.gene_request(apiname=api_prepare,
-                                 data=self.gene_params(api_prepare))
+    def __prepare_request(self):
+        return self.__generate_request(apiname=api_prepare,
+                                       data=self.__generate_params(api_prepare))
 
     # 上传
-    def upload_request(self, taskid, upload_file_path):
+    def __upload_request(self, taskid, upload_file_path):
         file_object = open(upload_file_path, 'rb')
         try:
             index = 1
@@ -137,13 +138,13 @@ class RequestApi(object):
                 if not content or len(content) == 0:
                     break
                 files = {
-                    "filename": self.gene_params(api_upload).get("slice_id"),
+                    "filename": self.__generate_params(api_upload).get("slice_id"),
                     "content": content
                 }
-                response = self.gene_request(api_upload,
-                                             data=self.gene_params(api_upload, taskid=taskid,
-                                                                   slice_id=sig.getNextSliceId()),
-                                             files=files)
+                response = self.__generate_request(api_upload,
+                                                   data=self.__generate_params(api_upload, taskid=taskid,
+                                                                               slice_id=sig.getNextSliceId()),
+                                                   files=files)
                 if response.get('ok') != 0:
                     # 上传分片失败
                     print('upload slice fail, response: ' + str(response))
@@ -156,70 +157,52 @@ class RequestApi(object):
         return True
 
     # 合并
-    def merge_request(self, taskid):
-        return self.gene_request(api_merge, data=self.gene_params(api_merge, taskid=taskid))
+    def __merge_request(self, taskid):
+        return self.__generate_request(api_merge, data=self.__generate_params(api_merge, taskid=taskid))
 
     # 获取进度
     def get_progress_request(self, taskid):
-        return self.gene_request(api_get_progress, data=self.gene_params(api_get_progress, taskid=taskid))
+        return self.__generate_request(api_get_progress, data=self.__generate_params(api_get_progress, taskid=taskid))
 
     # 获取结果
-    def get_result_request(self, taskid):
-        return self.gene_request(api_get_result, data=self.gene_params(api_get_result, taskid=taskid))
+    def __get_result_request(self, taskid):
+        return self.__generate_request(api_get_result, data=self.__generate_params(api_get_result, taskid=taskid))
 
-    def all_api_request(self):
-        # 1. 预处理
-        pre_result = self.prepare_request()
-        taskid = pre_result["data"]
-        # 2 . 分片上传
-        self.upload_request(taskid=taskid, upload_file_path=self.upload_file_path)
-        # 3 . 文件合并
-        self.merge_request(taskid=taskid)
-        # 4 . 获取任务进度
+    # 轮询任务进度
+    def get_task_progress(self, taskid, interval=10) -> str:
         while True:
-            # 每隔20秒获取一次任务进度
             progress = self.get_progress_request(taskid)
             progress_dic = progress
             if progress_dic['err_no'] != 0 and progress_dic['err_no'] != 26605:
-                print('task error: ' + progress_dic['failed'])
-                return
+                return 'task error: ' + progress_dic['failed']
             else:
                 data = progress_dic['data']
                 task_status = json.loads(data)
                 if task_status['status'] == 9:
-                    print('task ' + taskid + ' finished')
-                    break
+                    return 'task ' + taskid + ' finished'
                 print('The task ' + taskid + ' is in processing, task status: ' + str(data))
 
-            # 每次获取进度间隔20S
-            time.sleep(20)
-        # 5 . 获取结果
-        self.get_result_request(taskid=taskid)
+            # 每次获取进度间隔10S
+            time.sleep(interval)
 
-
-# 输入讯飞开放平台的appid，secret_key和待转写的文件路径
-if __name__ == '__main__':
-    xf_api = RequestApi(appid=Config.app_id, secret_key=Config.secrete_key,
-                        upload_file_path=r"test.mp3")
-    # api.all_api_request()
-    taskid = '175db7134b6b44cabd175e1ca2ea2275'
-
-    while True:
-        # 每隔20秒获取一次任务进度
-        progress = xf_api.get_progress_request(taskid)
-        progress_dic = progress
-        if progress_dic['err_no'] != 0 and progress_dic['err_no'] != 26605:
-            print('task error: ' + progress_dic['failed'])
-            break
+    def all_api_request(self):
+        # 1. 预处理
+        pre_result = self.__prepare_request()
+        taskid = pre_result["data"]
+        # 2 . 分片上传
+        self.__upload_request(taskid=taskid, upload_file_path=self.upload_file_path)
+        # 3 . 文件合并
+        self.__merge_request(taskid=taskid)
+        # 4 . 获取任务进度
+        response = self.get_task_progress(taskid=taskid)
+        # 如果任务完成
+        if response.find('finished') != -1:
+            # 5 . 获取结果
+            return self.__get_result_request(taskid=taskid)
         else:
-            data = progress_dic['data']
-            task_status = json.loads(data)
-            if task_status['status'] == 9:
-                print('task ' + taskid + ' finished')
-                break
-            print('The task ' + taskid + ' is in processing, task status: ' + str(data))
+            return '{"data": "", "ok": -1}'
 
-        # 每次获取进度间隔20S
-        time.sleep(20)
-    # 5 . 获取结果
-    xf_api.get_result_request(taskid=taskid)
+
+if __name__ == '__main__':
+    xf_api = RequestApi(upload_file_path=r"../test.mp3")
+    xf_api.all_api_request()

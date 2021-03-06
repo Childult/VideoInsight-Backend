@@ -14,7 +14,7 @@ def download_video(url: str, path: str) -> str:
 
     # get title
     ts = time.time()
-    title = str(base64.b64encode((str(ts) + url).encode('utf8')))
+    title = base64.b64encode((str(ts) + url).encode('utf8')).decode('utf-8')
 
     # get accessible qualities (480p default), format and container
     qualities = ['480', '720', '360', '240', '1080']
