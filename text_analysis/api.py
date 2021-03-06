@@ -1,25 +1,27 @@
-import json
-
-from text_analysis.preprocess import remove_stopwords, sen_generator
+from audio_analysis.api import audio_to_text
+from text_analysis.preprocess import sen_generator, preprocess_audio_text
 from text_analysis.tencent import auto_summarization
 
 
-def preprocess(json_str: str) -> str:
+def generate_abstract_from_audio(file: str) -> str:
     """
-    对讯飞语音转文本的结果进行预处理
-    :param json_str: json字符串
-    :return: 返回删除停用词的字符串
+    根据音频文件，先转换为文本，然后进行文本摘要
+    :param file:
+    :return:
     """
-    js = json.loads(json_str)
-    if js['ok'] == 0:
-        ret = []
-        for entry in js['data']:
-            text = entry.get('onebest')
-            if text:
-                ret.append(text.strip())
-        return remove_stopwords(''.join(ret))
+    ret = {
+        'AText': '',  # 语音转文本结果
+        'TAbstract': '',  # 文本摘要
+        'Error': ''  # 错误信息
+    }
+    text = preprocess_audio_text(audio_to_text(file))
+    if text != '':
+        ret['AText'] = text
     else:
-        return ''
+        ret['Error'] = 'failed to transfer audio to text'
+
+    ret['TAbstract'] = text_summarize(text)
+    return str(ret)
 
 
 def text_summarize(text: str) -> str:
@@ -31,9 +33,9 @@ def text_summarize(text: str) -> str:
     try:
         ret = []
         for seg in sen_generator(text):
-            print(len(seg), seg)
+            # 每次取出长度不超过2000字符的段落进行摘要
             ret.append(auto_summarization(seg))
-        return ''.join(ret)
+            return ''.join(ret)
     except Exception as e:
         return str(e)
 
