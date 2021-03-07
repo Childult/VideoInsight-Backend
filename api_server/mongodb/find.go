@@ -29,3 +29,28 @@ func FindOneByfilter(collName string, filter interface{}) (data bson.M, err erro
 	}
 	return data, err
 }
+
+// FindOne as indicated by the name
+func FindOne(document Key) (data bson.M, err error) {
+	// 设置连接时间阈值, 这段时间内连接失败会重新尝试
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// 初始化数据库
+	dba := initDB()
+	dba.connect()
+	defer dba.disconnect()
+
+	// 获取 media collection 的句柄
+	collName := document.GetCollName()
+	coll := dba.getCollection(collName)
+
+	// 搜索
+	KeyTag := document.GetKeyTag()
+	KeyValue := document.GetKeyValue()
+	err = coll.FindOne(ctx, bson.M{KeyTag: KeyValue}).Decode(&data)
+	if err != nil {
+		err = fmt.Errorf("Not Found <%s>", document)
+	}
+	return data, err
+}

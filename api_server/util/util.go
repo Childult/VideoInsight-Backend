@@ -1,12 +1,31 @@
-package router
+package util
 
 import (
 	"crypto/sha1"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
+
+var (
+	// WorkSpace 动态设置工作路径
+	WorkSpace = ""
+	// SavePath 文件保存位置
+	SavePath = "/home/donwload"
+)
+
+// SetWorkSpace 获取当前路径
+func SetWorkSpace() {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	WorkSpace, _ = filepath.Split(dir)
+}
 
 // MessageJSON contains unique identity and user data
 type MessageJSON struct {
@@ -32,7 +51,8 @@ func (json MessageJSON) GetID() string {
 	return fmt.Sprintf("%v", json.GetHash())
 }
 
-func getJSON(c *gin.Context) (json MessageJSON, err error) {
+// GetJSON return a json
+func GetJSON(c *gin.Context) (json MessageJSON, err error) {
 	// 获取数据
 	err = c.ShouldBindJSON(&json)
 	if err != nil {

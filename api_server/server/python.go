@@ -31,10 +31,11 @@ func (py *PyWorker) getCmd() (r string) {
 	r = fmt.Sprintf("\n"+
 		"import sys\n"+
 		"sys.path.append('%s')\n"+
+		"sys.path.append('%s')\n"+
 		"import %s as worker\n"+
 		"result = worker.%s(%s)\n"+
 		"print('GoTOPythonDelimiter',result,end='')\n",
-		py.PackagePath, py.FileName, py.MethodName, strings.Join(args, ","))
+		py.PackagePath, "/home/backend/SWC-Backend", py.FileName, py.MethodName, strings.Join(args, ","))
 	return
 }
 

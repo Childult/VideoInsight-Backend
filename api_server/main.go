@@ -2,16 +2,22 @@ package main
 
 import (
 	"swc/router"
+	"swc/util"
 
 	"github.com/gin-gonic/gin"
 )
 
 // GinRouter is a router
 func GinRouter() (r *gin.Engine) {
+	util.SetWorkSpace()
 	r = gin.Default()
 
 	// 创建任务
 	r.POST("/job", router.PostJob)
+
+	// 创建任务
+	r.DELETE("/job", router.DeleteJob)
+
 	return r
 }
 
