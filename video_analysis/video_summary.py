@@ -177,7 +177,7 @@ def video_summarize_api(video_path):
         gen.generate_dataset()
         gen.h5_file.close()
     main(video_path)
-    return 'output/' + name_video + '.mp4'
+    return 'output/' + name_video + '/' + name_video + '.mp4'
 
 if __name__ == '__main__':
     print("making dataset...........")
