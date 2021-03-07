@@ -15,7 +15,15 @@ var (
 	// WorkSpace 动态设置工作路径
 	WorkSpace = ""
 	// SavePath 文件保存位置
-	SavePath = "/home/donwload"
+	SavePath = "/home/download"
+)
+
+// 状态值
+const (
+	Downloading    = "Downloading"
+	Processing     = "Processing"
+	Completed      = "Completed"
+	ErrorHappended = "ErrorHappended"
 )
 
 // SetWorkSpace 获取当前路径

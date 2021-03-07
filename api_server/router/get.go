@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 	"swc/mongodb"
+	"swc/mongodb/job"
 	"swc/util"
 
 	"github.com/gin-gonic/gin"
@@ -18,12 +19,12 @@ func GetJob(c *gin.Context) {
 	}
 
 	// 构建任务
-	job := mongodb.Job{
+	job := job.Job{
 		DeviceID: json.DeviceID,
 		URL:      json.URL,
 		KeyWords: json.KeyWords,
 		JobID:    json.GetID(),
-		Status:   mongodb.Downloading,
+		Status:   util.Downloading,
 	}
 
 	// 查找数据
@@ -33,7 +34,7 @@ func GetJob(c *gin.Context) {
 		return
 	}
 	status := data["status"]
-	if status != mongodb.Completed {
+	if status != util.Completed {
 		// 返回
 		c.JSON(http.StatusOK, gin.H{"status": status})
 	} else {

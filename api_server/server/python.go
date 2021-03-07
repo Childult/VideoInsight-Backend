@@ -6,6 +6,7 @@ import (
 	"io"
 	"os/exec"
 	"strings"
+	"swc/util"
 )
 
 // PyArgs is a interface for arguments of python program
@@ -35,7 +36,7 @@ func (py *PyWorker) getCmd() (r string) {
 		"import %s as worker\n"+
 		"result = worker.%s(%s)\n"+
 		"print('GoTOPythonDelimiter',result,end='')\n",
-		py.PackagePath, "/home/backend/SWC-Backend", py.FileName, py.MethodName, strings.Join(args, ","))
+		util.WorkSpace, py.PackagePath, py.FileName, py.MethodName, strings.Join(args, ","))
 	return
 }
 

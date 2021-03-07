@@ -1,4 +1,4 @@
-package mongodb
+package job
 
 // Job include media and audio
 type Job struct {
@@ -8,14 +8,6 @@ type Job struct {
 	JobID    string   `json:"jobid"`
 	Status   string   `json:"status"`
 }
-
-// 状态值
-const (
-	Downloading    = "Downloading"
-	Processing     = "Processing"
-	Completed      = "Completed"
-	ErrorHappended = "ErrorHappended"
-)
 
 // GetKeyTag implement the interface Key
 func (media Job) GetKeyTag() string {

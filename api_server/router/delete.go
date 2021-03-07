@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 	"swc/mongodb"
+	"swc/mongodb/job"
 	"swc/util"
 
 	"github.com/gin-gonic/gin"
@@ -18,12 +19,12 @@ func DeleteJob(c *gin.Context) {
 	}
 
 	// 构建任务
-	job := mongodb.Job{
+	job := job.Job{
 		DeviceID: json.DeviceID,
 		URL:      json.URL,
 		KeyWords: json.KeyWords,
 		JobID:    json.GetID(),
-		Status:   mongodb.Downloading,
+		Status:   util.Downloading,
 	}
 	// 删除数据库
 	err = mongodb.DeleteOne(job)
