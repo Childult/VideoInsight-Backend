@@ -32,6 +32,6 @@ def video_summarize(file: str) -> str:
     """
     视频摘要
     :param file: 视频文件路径 dataset/taichi.mp4
-    :return: 生成的视频路径 output/taichi.mp4
+    :return: 生成的视频路径 output/taichi/taichi.mp4
     """
     return vsumm.video_summarize_api(file)
