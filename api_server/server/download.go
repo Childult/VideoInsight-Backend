@@ -22,13 +22,40 @@ func creatSource(job job.Job) {
 	// 检查资源是否存在
 	exists := mongodb.HaveExisted(source)
 	if exists {
-		go TaskSchedule(TaskErr, job)
+		go Schedule(TaskErr, job)
 		return
 	}
 
 	// 首次写入数据库
 	mongodb.InsertOne(source)
-	go TaskSchedule(DownloadMedia, job)
+	go Schedule(DownloadMedia, job)
+}
+
+func mediaDownload(job job.Job) {
+	// 获取资源信息
+	source, err := source.GetByKey(job.URL)
+	if err != nil {
+		// 获取资源出错
+		job.Status = util.ErrorHappended
+		mongodb.Update(job)
+		return
+	}
+	// 构建视频下载对象
+	videoGetterPath := filepath.Join(util.WorkSpace, "video_getter")
+	fileName := "main"
+	methodName := "download_video"
+	args := []PyArgs{
+		ArgsTemp(source.URL),
+		ArgsTemp(source.Location),
+	}
+	python := PyWorker{
+		PackagePath: videoGetterPath,
+		FileName:    fileName,
+		MethodName:  methodName,
+		Args:        args,
+	}
+
+	python.Call()
 }
 
 func downloadMedia(job *job.Job) {

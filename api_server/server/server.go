@@ -10,17 +10,41 @@ import (
 )
 
 const (
+	// Start 创建资源, 写入数据库
 	Start = iota
+	// DownloadMedia 下载资源
 	DownloadMedia
+	// ExtractAudio 提取音频
+	ExtractAudio
+	// Existed 资源已存在
+	Existed
+	// TaskErr 错误发生
 	TaskErr
 )
 
+// PythonHandlerFunc python 回调函数
+type PythonHandlerFunc func(job job.Job, result string)
+
+// Schedule .
+func Schedule(status int, job job.Job) {
+	switch status {
+	case Start:
+		go creatSource(job)
+
+	case DownloadMedia:
+		go mediaDownload(job)
+
+	case ExtractAudio:
+
+	case Existed:
+
+	case TaskErr:
+
+	}
+}
+
 // TaskSchedule .
 func TaskSchedule(status int, job job.Job) {
-	// switch status {
-	// case Start:
-	// 	creatSource(job)
-	// }
 	go downloadMedia(&job)
 }
 

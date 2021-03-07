@@ -73,6 +73,37 @@ func (py *PyWorker) Call() (result []string) {
 	return
 }
 
+// ReCall 采用管道, 可以实时输出
+func (py *PyWorker) ReCall(handles ...PythonHandlerFunc) {
+	cmd := exec.Command("python3", "-c", py.getCmd())
+	fmt.Println(cmd.Args)
+
+	// 获取标准输出
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		panic(err)
+	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		panic(err)
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		panic(err)
+	}
+	for _, handle := range handles {
+		go ReStdout(stdout, handle)
+	}
+	for _, handle := range handles {
+		go ReStdout(stderr, handle)
+	}
+	cmd.Wait()
+	return
+}
+
 // ArgsTemp is a demo type
 type ArgsTemp string
 
@@ -104,4 +135,20 @@ func Stdout(r io.Reader) (result []string) {
 		}
 	}
 	return
+}
+
+// ReStdout 处理标准输出
+func ReStdout(r io.Reader, handles PythonHandlerFunc) {
+	var result []string
+	Delimiter := "GoTOPythonDelimiter "
+	len := len(Delimiter)
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		s := scanner.Text()
+		fmt.Println(s)
+		index := strings.Index(s, Delimiter)
+		if index != -1 {
+			result = append(result, s[index+len:])
+		}
+	}
 }

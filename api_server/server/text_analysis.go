@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"swc/mongodb"
@@ -8,6 +9,12 @@ import (
 	"swc/mongodb/source"
 	"swc/util"
 )
+
+type textAbstract struct {
+	AText     string `json:"AText"`
+	TAbstract string `json:"TAbstract"`
+	Error     string `json:"Error"`
+}
 
 func textAnalysis(job *job.Job, source source.Source) {
 	// 构建文本分析对象
@@ -35,6 +42,11 @@ func textAnalysis(job *job.Job, source source.Source) {
 		return
 	}
 
+	var text textAbstract
 	fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++")
-	fmt.Println(result)
+	err := json.Unmarshal([]byte(result[0]), &text)
+	if err != nil {
+
+	}
+	fmt.Printf("%+v\n", text)
 }
