@@ -17,10 +17,10 @@ def generate_abstract_from_audio(file: str) -> str:
     text = preprocess_audio_text(audio_to_text(file))
     if text != '':
         ret['AText'] = text
+        ret['TAbstract'] = text_summarize(text)
     else:
         ret['Error'] = 'failed to transfer audio to text'
 
-    ret['TAbstract'] = text_summarize(text)
     return str(ret)
 
 

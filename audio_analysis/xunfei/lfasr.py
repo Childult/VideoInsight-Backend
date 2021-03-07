@@ -111,16 +111,15 @@ class RequestApi(object):
         return param_dict
 
     # 请求和结果解析，结果中各个字段的含义可参考：https://doc.xfyun.cn/rest_api/%E8%AF%AD%E9%9F%B3%E8%BD%AC%E5%86%99.html
-    def __generate_request(self, apiname, data, files=None, headers=None) -> str:
+    def __generate_request(self, apiname, data, files=None, headers=None):
         response = requests.post(lfasr_host + apiname, data=data, files=files, headers=headers)
         result = json.loads(response.text)
         if result["ok"] == 0:
-            # print("{} success:".format(apiname) + str(result))
-            return str(result)
+            print("{} success:".format(apiname) + str(result))
+            return result
         else:
-            # print("{} error:".format(apiname) + str(result))
-            # exit(0)
-            return str(result)
+            print("{} error:".format(apiname) + str(result))
+            return result
 
     # 预处理
     def __prepare_request(self):
@@ -165,7 +164,7 @@ class RequestApi(object):
         return self.__generate_request(api_get_progress, data=self.__generate_params(api_get_progress, taskid=taskid))
 
     # 获取结果
-    def __get_result_request(self, taskid):
+    def get_result_request(self, taskid):
         return self.__generate_request(api_get_result, data=self.__generate_params(api_get_result, taskid=taskid))
 
     # 轮询任务进度
@@ -185,10 +184,11 @@ class RequestApi(object):
             # 每次获取进度间隔10S
             time.sleep(interval)
 
-    def all_api_request(self):
+    def all_api_request(self) -> dict:
         # 1. 预处理
         pre_result = self.__prepare_request()
         taskid = pre_result["data"]
+        print(taskid)
         # 2 . 分片上传
         self.__upload_request(taskid=taskid, upload_file_path=self.upload_file_path)
         # 3 . 文件合并
@@ -198,11 +198,16 @@ class RequestApi(object):
         # 如果任务完成
         if response.find('finished') != -1:
             # 5 . 获取结果
-            return self.__get_result_request(taskid=taskid)
+            return self.get_result_request(taskid=taskid)
         else:
-            return '{"data": "", "ok": -1}'
+            return {
+                'data': "",
+                'ok': -1
+            }
 
 
 if __name__ == '__main__':
     xf_api = RequestApi(upload_file_path=r"../test.mp3")
-    xf_api.all_api_request()
+    s = xf_api.get_result_request(taskid='8abfe60c473741aab57d99765ffc011a')
+    print(s)
+    # print(xf_api.all_api_request())
