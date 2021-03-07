@@ -1,3 +1,5 @@
+import json
+
 from audio_analysis.api import audio_to_text
 from text_analysis.preprocess import sen_generator, preprocess_audio_text
 from text_analysis.tencent import auto_summarization
@@ -21,7 +23,7 @@ def generate_abstract_from_audio(file: str) -> str:
     else:
         ret['Error'] = 'failed to transfer audio to text'
 
-    return str(ret)
+    return json.dumps(ret, ensure_ascii=False)
 
 
 def text_summarize(text: str) -> str:
@@ -30,14 +32,14 @@ def text_summarize(text: str) -> str:
     :param text: 经过预处理后的文本
     :return: 摘要
     """
-    try:
-        ret = []
-        for seg in sen_generator(text):
+    ret = []
+    for seg in sen_generator(text):
+        try:
             # 每次取出长度不超过2000字符的段落进行摘要
             ret.append(auto_summarization(seg))
-            return ''.join(ret)
-    except Exception as e:
-        return str(e)
+        except Exception as e:
+            print('in text_summarize: ', e)
+    return ''.join(ret)
 
 
 def cal_text_similarity(text_a, text_b: str) -> float:
