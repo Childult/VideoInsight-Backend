@@ -7,11 +7,12 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"swc/logger"
 	"swc/mongodb/job"
 	"swc/util"
 )
 
-// PyWorker python worker
+// PyWorker 用于调用 python
 type PyWorker struct {
 	PackagePath string
 	FileName    string
@@ -19,7 +20,7 @@ type PyWorker struct {
 	Args        []string
 }
 
-// SetArg toString
+// SetArg 设置 python 调用的参数, 数字<1>转为<"1">, 字符串<"1">转为<'"1"'>
 func SetArg(i interface{}) string {
 	var result string
 	switch i := i.(type) {
@@ -34,6 +35,7 @@ func SetArg(i interface{}) string {
 // PythonHandlerFunc python 回调函数
 type PythonHandlerFunc func(job *job.Job, result []string)
 
+// getCmd 执行命令设置, 调用采用`python -c`, 直接在命令行里写一个简单调用的代码
 func (py *PyWorker) getCmd() (r string) {
 	r = fmt.Sprintf("\n"+
 		"import sys\n"+
@@ -46,10 +48,10 @@ func (py *PyWorker) getCmd() (r string) {
 	return
 }
 
-// Call 采用管道, 可以实时输出
+// Call 采用管道和`-c`参数, 可以实时输出
 func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
-	cmd := exec.Command("python3", "-c", py.getCmd())
-	fmt.Println(cmd.Args)
+	cmd := exec.Command("python3", "-u", "-c", py.getCmd())
+	logger.Info.Println(cmd.Args)
 
 	// 获取标准输出
 	stdout, err := cmd.StdoutPipe()
@@ -63,7 +65,10 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 		panic(err)
 	}
 
+	// 错误直接输出
 	go EasyOut(stderr)
+
+	// 标准输出进行处理
 	if handles == nil {
 		go HandleOut(stdout, job, nil)
 	} else {
@@ -72,8 +77,8 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 		}
 	}
 
-	err = cmd.Start()
 	// 开始调用
+	err = cmd.Start()
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +94,7 @@ func HandleOut(r io.Reader, job *job.Job, handles PythonHandlerFunc) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		s := scanner.Text()
-		fmt.Println(s)
+		logger.Info.Println(s)
 		index := strings.Index(s, Delimiter)
 		if index != -1 {
 			result = append(result, s[index+len:])
@@ -104,6 +109,6 @@ func HandleOut(r io.Reader, job *job.Job, handles PythonHandlerFunc) {
 func EasyOut(r io.Reader) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+		logger.Info.Println(scanner.Text())
 	}
 }

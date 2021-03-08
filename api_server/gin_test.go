@@ -17,6 +17,8 @@ import (
 )
 
 func TestPython(t *testing.T) {
+	mongodb.SWCDB = "test"
+	// python 测试
 	python := server.PyWorker{
 		PackagePath: "/home/download/",
 		FileName:    "python",
@@ -26,7 +28,6 @@ func TestPython(t *testing.T) {
 	job := job.Job{}
 	python.Call(&job)
 	fmt.Printf("%+v, %+v\n", python, job)
-	time.Sleep(time.Second * 13)
 }
 
 func TestDeleteAll(t *testing.T) {

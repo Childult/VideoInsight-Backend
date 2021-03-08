@@ -9,33 +9,33 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// Resource include media and audio
+// Resource 目标资源
 type Resource struct {
-	URL       string `bson:"url"                json:"url"`
-	Status    int32  `bson:"status"             json:"status"`
-	Location  string `bson:"location"           json:"location"`
-	VideoPath string `bson:"video_path"         json:"video_path"`
-	AudioPath string `bson:"audio_path"         json:"audio_path"`
-	AbsText   string `bson:"abstract_text"      json:"abstract_text"`
-	AbsVideo  string `bson:"abstract_video"     json:"abstract_video"`
+	URL       string `bson:"url"                json:"url"`            // 逐渐
+	Status    int32  `bson:"status"             json:"status"`         // 当前状态
+	Location  string `bson:"location"           json:"location"`       // 存储路径
+	VideoPath string `bson:"video_path"         json:"video_path"`     // 视频文件名
+	AudioPath string `bson:"audio_path"         json:"audio_path"`     // 音频文件名
+	AbsText   string `bson:"abstract_text"      json:"abstract_text"`  // 无关键词对应的文本摘要哈希
+	AbsVideo  string `bson:"abstract_video"     json:"abstract_video"` // 无关键词对应的视频摘要哈希
 }
 
-// GetKeyTag implement the interface Key
+// GetKeyTag 返回主键标签
 func (r Resource) GetKeyTag() string {
 	return "url"
 }
 
-// GetKeyValue implement the interface Key
+// GetKeyValue 返回主键值
 func (r Resource) GetKeyValue() string {
 	return r.URL
 }
 
-// GetCollName implement the interface Key
+// GetCollName 返回数据库名称
 func (r Resource) GetCollName() string {
 	return "resource"
 }
 
-// GetByKey return one resource
+// GetByKey 通过 url 返回数据内容
 func GetByKey(url string) (s Resource, err error) {
 	// 设置连接时间阈值, 这段时间内连接失败会重新尝试
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -61,26 +61,26 @@ func GetByKey(url string) (s Resource, err error) {
 	return
 }
 
-// Refresh read the database, refresh variables in place
-func (s *Resource) Refresh() (err error) {
-	*s, err = GetByKey(s.URL)
+// Refresh 原地更新数据
+func (r *Resource) Refresh() (err error) {
+	*r, err = GetByKey(r.URL)
 	return
 }
 
-// SetStatus implement the interface Key
-func (s *Resource) SetStatus(status int32) {
-	s.Status = status
-	mongodb.Update(s)
+// SetStatus 设置状态并更新
+func (r *Resource) SetStatus(status int32) {
+	r.Status = status
+	mongodb.Update(r)
 }
 
-// SetAbsText implement the interface Key
-func (s *Resource) SetAbsText(key string) {
-	s.AbsText = key
-	mongodb.Update(s)
+// SetAbsText 设置文本摘要哈希地址并更新
+func (r *Resource) SetAbsText(key string) {
+	r.AbsText = key
+	mongodb.Update(r)
 }
 
-// SetAbsVideo implement the interface Key
-func (s *Resource) SetAbsVideo(key string) {
-	s.AbsVideo = key
-	mongodb.Update(s)
+// SetAbsVideo 设置视频摘要哈希地址并更新
+func (r *Resource) SetAbsVideo(key string) {
+	r.AbsVideo = key
+	mongodb.Update(r)
 }

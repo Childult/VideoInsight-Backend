@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// Update replace one
+// Update 寻找数据库中与输入数据主键相同的数据, 并用输入数据代替之
 func Update(document Key) (err error) {
 	// 检查数据是否存在
 	exists := HaveExisted(document)
@@ -39,7 +39,7 @@ func Update(document Key) (err error) {
 	return err
 }
 
-// UpdateOne replace one
+// UpdateOne 寻找数据库中与输入数据主键相同的数据, 并用输入数据代替之
 func UpdateOne(rawData, newData Key) (err error) {
 	// 检查数据是否属于同一张表
 	collName := rawData.GetCollName()
@@ -83,7 +83,7 @@ func UpdateOne(rawData, newData Key) (err error) {
 	return err
 }
 
-// ReplaceOneByFilter replace one
+// ReplaceOneByFilter 通过过滤条件和集合名, 寻找到第一条数据, 代替之
 func ReplaceOneByFilter(collName string, filter interface{}, update interface{}) (err error) {
 	// 设置连接时间阈值, 这段时间内连接失败会重新尝试
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -105,7 +105,7 @@ func ReplaceOneByFilter(collName string, filter interface{}, update interface{})
 	return err
 }
 
-// UpdateOneByFilter update one
+// UpdateOneByFilter 通过过滤条件和集合名, 寻找到第一条数据, 进行更新. 更新只会修改不同的地方, 相同或者为空的值不做更改
 func UpdateOneByFilter(collName string, filter interface{}, update interface{}) (err error) {
 	// 设置连接时间阈值, 这段时间内连接失败会重新尝试
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

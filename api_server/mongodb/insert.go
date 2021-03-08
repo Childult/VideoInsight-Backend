@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// InsertOne as indicated by the name
+// InsertOne 通过主键插入数据, 主键已存在时报错
 func InsertOne(document Key) (err error) {
 	// 检查数据是否存在
 	exists := HaveExisted(document)

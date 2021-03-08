@@ -11,12 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// DBAccessor is a mongodb accessor
+// DBAccessor 数据库访问对象
 type DBAccessor struct {
 	client *mongo.Client
 }
 
-// Key return a key
+// Key 实现该接口则能对集合进行访问
 type Key interface {
 	GetKeyTag() string
 	GetKeyValue() string
@@ -24,7 +24,7 @@ type Key interface {
 }
 
 var (
-	// SWCDB swagger codegen db
+	// SWCDB 数据库名
 	SWCDB = "swcdb"
 )
 
@@ -33,13 +33,13 @@ const (
 	MongoDBURI = "mongodb://localhost:27017"
 )
 
-// InitDB return one *DBAccessor
+// InitDB 返回 DBAccessor
 func InitDB() (dba *DBAccessor) {
 	dba = &DBAccessor{}
 	return
 }
 
-// Connect to mongodb
+// Connect 连接到 mongodb
 func (dba *DBAccessor) Connect() (err error) {
 	// 创建 mongodb client
 	dba.client, err = mongo.NewClient(options.Client().ApplyURI(MongoDBURI))
@@ -65,7 +65,7 @@ func (dba *DBAccessor) Connect() (err error) {
 	return nil
 }
 
-// Disconnect to mongodb
+// Disconnect 断开连接, mongo-driver 中实现了连接池, 所以每次用完后即时断开即可
 func (dba *DBAccessor) Disconnect() (err error) {
 	// 设置连接时间阈值, 这段时间内连接失败会重新尝试
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -78,7 +78,7 @@ func (dba *DBAccessor) Disconnect() (err error) {
 	return nil
 }
 
-// GetCollection return a collection according to name
+// GetCollection 通过集合名称获取访问该集合的句柄
 func (dba *DBAccessor) GetCollection(name string) (coll *mongo.Collection) {
 
 	// 连接数据库
@@ -90,7 +90,7 @@ func (dba *DBAccessor) GetCollection(name string) (coll *mongo.Collection) {
 	return
 }
 
-// ShowAllDatabaseNames show all dbs
+// ShowAllDatabaseNames 显示所有数据库
 func (dba *DBAccessor) ShowAllDatabaseNames() (databases []string) {
 	// 设置连接时间阈值, 这段时间内连接失败会重新尝试
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -102,7 +102,7 @@ func (dba *DBAccessor) ShowAllDatabaseNames() (databases []string) {
 	return
 }
 
-// HaveExisted as indicated by the name
+// HaveExisted 通过数据的主键, 查看数据是否存在
 func HaveExisted(document Key) (b bool) {
 	// 设置连接时间阈值, 这段时间内连接失败会重新尝试
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

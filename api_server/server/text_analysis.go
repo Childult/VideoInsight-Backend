@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"swc/logger"
 	"swc/mongodb"
 	"swc/mongodb/abstext"
 	"swc/mongodb/job"
@@ -40,7 +41,7 @@ func textAnalysis(job *job.Job) {
 	}
 
 	// 文本分析
-	fmt.Println(python)
+	logger.Info.Println(python)
 	// go python.Call(job, textHandle)
 }
 

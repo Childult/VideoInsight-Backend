@@ -1,9 +1,9 @@
 package server
 
 import (
-	"fmt"
 	"path/filepath"
 	"strconv"
+	"swc/logger"
 	"swc/mongodb"
 	"swc/mongodb/job"
 	"swc/mongodb/resource"
@@ -12,11 +12,12 @@ import (
 )
 
 func creatResource(job *job.Job) {
+	logger.Info.Printf("创建资源. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
 	// 构建资源
 	resource := resource.Resource{
 		URL:      job.URL,
 		Status:   util.ResourceDownloading,
-		Location: filepath.Join(util.SavePath, strconv.FormatInt(time.Now().Unix(), 10)),
+		Location: filepath.Join(util.Location, strconv.FormatInt(time.Now().Unix(), 10)),
 	}
 
 	// 检查资源是否存在
@@ -33,6 +34,7 @@ func creatResource(job *job.Job) {
 }
 
 func mediaDownload(job *job.Job) {
+	logger.Info.Printf("下载视频. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
 	// 获取资源信息
 	resource, err := resource.GetByKey(job.URL)
 	if err != nil {
@@ -83,6 +85,7 @@ func downloadHandle(job *job.Job, result []string) {
 }
 
 func extractAudio(job *job.Job) {
+	logger.Info.Printf("提取音频. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
 	// 获取资源信息
 	r, err := resource.GetByKey(job.URL)
 	if err != nil {
@@ -133,8 +136,8 @@ func extractHandle(job *job.Job, result []string) {
 }
 
 func waitDownload(job *job.Job) {
+	logger.Info.Printf("资源已经存在, 等待下载完成. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
 	// 获取资源信息
-	fmt.Println("========================= 获取资源信息 ===================================")
 	r, err := resource.GetByKey(job.URL)
 	if err != nil {
 		// 获取资源出错
@@ -148,17 +151,15 @@ func waitDownload(job *job.Job) {
 			job.SetStatus(util.JobExtractDone)
 			go JobSchedule(job)
 		} else if r.Status > util.ResourceCompleted {
-			fmt.Println("========================= 资源下载出错 ===================================")
 
 		} else {
-
-			fmt.Println("========================= 资源已经存在, 等待下载完成 ===================================")
 			time.Sleep(time.Second * 5)
 		}
 	}
 }
 
 func extractAbstract(job *job.Job) {
+	logger.Info.Printf("音频提取成功, 提取文本摘要和视频摘要. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
 	// 进行文本分析
 	go textAnalysis(job)
 	// 进行视频分析
