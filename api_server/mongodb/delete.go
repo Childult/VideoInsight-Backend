@@ -21,13 +21,13 @@ func DeleteOne(document Key) (err error) {
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
 	collName := document.GetCollName()
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 删除
 	_, err = coll.DeleteOne(ctx, bson.M{document.GetKeyTag(): document.GetKeyValue()})
@@ -44,13 +44,13 @@ func DeleteOneByfilter(collName string, filter interface{}) (err error) {
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
 
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 删除
 	_, err = coll.DeleteOne(ctx, filter)
@@ -67,13 +67,13 @@ func DeleteManyByfilter(collName string, filter interface{}) (err error) {
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
 
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 删除
 	_, err = coll.DeleteMany(ctx, filter)

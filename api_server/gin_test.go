@@ -4,75 +4,125 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"strings"
 	"swc/mongodb"
+	"swc/mongodb/job"
+	"swc/mongodb/resource"
 	"swc/server"
-	"swc/util"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
-// 判断所给路径文件/文件夹是否存在
-func Exists(path string) bool {
-	_, err := os.Stat(path) //os.Stat获取文件信息
-	if err != nil {
-		if os.IsExist(err) {
-			return true
-		}
-		return false
+func TestPython(t *testing.T) {
+	python := server.PyWorker{
+		PackagePath: "/home/download/",
+		FileName:    "python",
+		MethodName:  "myPrint",
+		Args:        []string{server.SetArg("1")},
 	}
-	return true
+	job := job.Job{}
+	python.Call(&job)
+	fmt.Printf("%+v, %+v\n", python, job)
+	time.Sleep(time.Second * 13)
 }
 
-// 判断所给路径是否为文件夹
-func IsDir(path string) bool {
-	s, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return s.IsDir()
+func TestDeleteAll(t *testing.T) {
+	// 删除所有数据
+	mongodb.SWCDB = "test"
+	filter := bson.M{}
+
+	err := mongodb.DeleteOneByfilter("job", filter)
+	assert.Equal(t, nil, err)
+
+	err = mongodb.DeleteOneByfilter("resource", filter)
+	assert.Equal(t, nil, err)
+
+	err = mongodb.DeleteOneByfilter("abstext", filter)
+	assert.Equal(t, nil, err)
+
+	data, err := mongodb.FindOneByfilter("job", filter)
+	expectErr := fmt.Errorf("Not Found <%+v>", filter)
+	expectdata := bson.M(nil)
+	assert.Equal(t, expectErr, err)
+	assert.Equal(t, expectdata, data)
+
+	data, err = mongodb.FindOneByfilter("resource", filter)
+	expectErr = fmt.Errorf("Not Found <%+v>", filter)
+	expectdata = bson.M(nil)
+	assert.Equal(t, expectErr, err)
+	assert.Equal(t, expectdata, data)
+
+	data, err = mongodb.FindOneByfilter("abstext", filter)
+	expectErr = fmt.Errorf("Not Found <%+v>", filter)
+	expectdata = bson.M(nil)
+	assert.Equal(t, expectErr, err)
+	assert.Equal(t, expectdata, data)
 }
 
-// 判断所给路径是否为文件
-func IsFile(path string) bool {
-	return !IsDir(path)
-}
-
-// 下载测试
-func TestMedia(t *testing.T) {
-}
-
-func Test(t *testing.T) {
-	filePath := "/home/download/1615035748//home/download/1615035748/MTYxNTAzNTc1NC41MDE4OThodHRwczovL3d3dy5iaWxpYmlsaS5jb20vdmlkZW8vQlYxQUs0eTFKN1pl.mp3"
-	result := Exists(filePath)
-	fmt.Println(result)
-}
-
-func TestDownload(t *testing.T) {
+func TestResourceInsertDelete(t *testing.T) {
+	// reource 的插入删除测试
 	mongodb.SWCDB = "test"
 
-	mediaURL := "https://www.bilibili.com/video/BV1py4y1a7tP"
-	savePath := "/home/download/1234567890/"
+	url := "www.baidu.com"
+	resource1 := &resource.Resource{
+		URL:    url,
+		Status: 0,
+	}
 
-	// 构建视频下载对象
-	videoGetterPath := filepath.Join(util.WorkSpace, "video_getter")
-	fileName := "main"
-	methodName := "download_video"
-	args := []server.PyArgs{
-		server.ArgsTemp(mediaURL),
-		server.ArgsTemp(savePath),
+	mongodb.InsertOne(resource1) // 插入
+	resource1.SetStatus(1)       // 状态更新
+	assert.Equal(t, int32(1), resource1.Status)
+
+	resource2, err := resource.GetByKey("www.baidu.com") // 读取
+	assert.Equal(t, int32(1), resource2.Status)
+	assert.Equal(t, nil, err)
+
+	err = mongodb.DeleteOne(resource2) // 删除
+	assert.Equal(t, nil, err)
+
+	resource3, err := resource.GetByKey("www.baidu.com") // 删除后读取
+	filter := bson.M{"url": url}
+	expectErr := fmt.Errorf("Not Found <%+v>", filter)
+	assert.Equal(t, expectErr, err)
+	assert.Equal(t, "", resource3.AbsText)
+}
+
+func TestJob(t *testing.T) {
+	// job 读取测试
+	mongodb.SWCDB = "test"
+
+	// 切片对象是一个指针, 未赋初值时为 nil, 与 [] 不同. 前者是空指针, 后者是空切片, 二者都可以调用方法.
+	job1 := job.Job{
+		DeviceID: "1",
 	}
-	python := server.PyWorker{
-		PackagePath: videoGetterPath,
-		FileName:    fileName,
-		MethodName:  methodName,
-		Args:        args,
+	fmt.Printf("%+v\n", job1)
+	fmt.Println(`job1["key_words"] == nil? true`)
+	assert.Equal(t, true, job1.KeyWords == nil)
+	mongodb.InsertOne(job1)
+
+	filter := bson.M{}
+	data, _ := mongodb.FindOneByfilter("job", filter)
+	fmt.Println(`data["key_words"] == nil? true`)
+	assert.Equal(t, true, data["key_words"] == nil)
+	mongodb.DeleteOneByfilter("job", filter)
+
+	job2 := job.Job{
+		DeviceID: "1",
+		KeyWords: []string{},
 	}
-	python.Call()
+	fmt.Printf("%+v\n", job2)
+	fmt.Println(`job2["key_words"] == nil? false`)
+	assert.Equal(t, false, job2.KeyWords == nil)
+	mongodb.InsertOne(job2)
+
+	data, _ = mongodb.FindOneByfilter("job", filter)
+	fmt.Println(`data["key_words"] == nil? false`)
+	assert.Equal(t, false, data["key_words"] == nil)
+	mongodb.DeleteOneByfilter("job", filter)
+
 }
 
 func TestTextAnalysis(t *testing.T) {
@@ -92,7 +142,7 @@ func TestTextAnalysis(t *testing.T) {
 			body:   `{"deviceid":"1", "url":"https://www.bilibili.com/video/BV18r4y1A7Uv"}`,
 			header: map[string]string{"Content-Type": "application/json;charset=utf-8"},
 			status: 200,
-			result: `{"jobid":"[241 224 136 245 8 214 233 235 202 207 19 254]"}`,
+			result: `{"jobid":"[184 146 89 194 239 164 154 224 205 61 182 101]"}`,
 		},
 		{
 			method: "DELETE",

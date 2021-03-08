@@ -6,136 +6,161 @@ import (
 	"strconv"
 	"swc/mongodb"
 	"swc/mongodb/job"
-	"swc/mongodb/source"
+	"swc/mongodb/resource"
 	"swc/util"
 	"time"
 )
 
-func creatSource(job job.Job) {
+func creatResource(job *job.Job) {
 	// 构建资源
-	source := source.Source{
+	resource := resource.Resource{
 		URL:      job.URL,
-		Status:   util.Downloading,
+		Status:   util.ResourceDownloading,
 		Location: filepath.Join(util.SavePath, strconv.FormatInt(time.Now().Unix(), 10)),
 	}
 
 	// 检查资源是否存在
-	exists := mongodb.HaveExisted(source)
+	exists := mongodb.HaveExisted(resource)
 	if exists {
-		go Schedule(TaskErr, job)
+		job.SetStatus(util.JobExisted)
+		go JobSchedule(job)
 		return
 	}
-
 	// 首次写入数据库
-	mongodb.InsertOne(source)
-	go Schedule(DownloadMedia, job)
+	mongodb.InsertOne(resource)
+	job.SetStatus(util.JobDownloadMedia)
+	go JobSchedule(job)
 }
 
-func mediaDownload(job job.Job) {
+func mediaDownload(job *job.Job) {
 	// 获取资源信息
-	source, err := source.GetByKey(job.URL)
+	resource, err := resource.GetByKey(job.URL)
 	if err != nil {
 		// 获取资源出错
-		job.Status = util.ErrorHappended
-		mongodb.Update(job)
+		job.SetStatus(util.JobErrFailedToFindResource)
+		go JobSchedule(job)
 		return
 	}
+
 	// 构建视频下载对象
-	videoGetterPath := filepath.Join(util.WorkSpace, "video_getter")
-	fileName := "main"
-	methodName := "download_video"
-	args := []PyArgs{
-		ArgsTemp(source.URL),
-		ArgsTemp(source.Location),
-	}
 	python := PyWorker{
-		PackagePath: videoGetterPath,
-		FileName:    fileName,
-		MethodName:  methodName,
-		Args:        args,
+		PackagePath: filepath.Join(util.WorkSpace, "video_getter"),
+		FileName:    "main",
+		MethodName:  "download_video",
+		Args: []string{
+			SetArg(resource.URL),
+			SetArg(resource.Location),
+		},
 	}
 
-	python.Call()
+	go python.Call(job, downloadHandle)
 }
 
-func downloadMedia(job *job.Job) {
-	// 构建资源
-	source := source.Source{
-		URL:      job.URL,
-		Status:   util.Downloading,
-		Location: filepath.Join(util.SavePath, strconv.FormatInt(time.Now().Unix(), 10)),
-	}
-
-	// 检查资源是否存在
-	exists := mongodb.HaveExisted(source)
-	if exists {
-		go waiter(job)
+func downloadHandle(job *job.Job, result []string) {
+	// 获取资源信息
+	r, err := resource.GetByKey(job.URL)
+	if err != nil {
+		// 获取资源出错
+		job.SetStatus(util.JobErrFailedToFindResource)
+		go JobSchedule(job)
 		return
 	}
-	// 首次写入数据库
-	mongodb.InsertOne(source)
 
-	// 构建视频下载对象
-	videoGetterPath := filepath.Join(util.WorkSpace, "video_getter")
-	fileName := "main"
-	methodName := "download_video"
-	args := []PyArgs{
-		ArgsTemp(source.URL),
-		ArgsTemp(source.Location),
-	}
-	python := PyWorker{
-		PackagePath: videoGetterPath,
-		FileName:    fileName,
-		MethodName:  methodName,
-		Args:        args,
-	}
-
-	// 开始下载
-	fmt.Println("=====================================================")
-	fmt.Println(python)
-	result := python.Call()
+	// 是否下载成功
 	if len(result) != 1 {
-		// 异常
-		source.Status = util.ErrorHappended
-		mongodb.Update(source)
-		go waiter(job)
+		// 下载失败
+		r.SetStatus(util.ResourceErrDownloadFailed)
+		job.SetStatus(util.JobErrDownloadFailed)
+		go JobSchedule(job)
 		return
 	}
 
-	// 下载成功, 更新数据库状态
-	source.VideoPath = result[0]
-	source.Status = util.Processing
-	mongodb.Update(source)
+	// 下载成功, 更新状态
+	r.VideoPath = result[0]
+	r.SetStatus(util.ResourceExtracting)
+	job.SetStatus(util.JobExtractAudio)
+	go JobSchedule(job)
+}
+
+func extractAudio(job *job.Job) {
+	// 获取资源信息
+	r, err := resource.GetByKey(job.URL)
+	if err != nil {
+		// 获取资源出错
+		job.SetStatus(util.JobErrFailedToFindResource)
+		go JobSchedule(job)
+		return
+	}
 
 	// 构建音频提取对象
-	python.PackagePath = filepath.Join(util.WorkSpace, "video_analysis")
-	python.FileName = "extract_audio"
-	python.MethodName = "extract_audio"
-	python.Args = []PyArgs{
-		ArgsTemp(filepath.Join(source.Location, source.VideoPath)),
+	python := PyWorker{
+		PackagePath: filepath.Join(util.WorkSpace, "video_analysis"),
+		FileName:    "extract_audio",
+		MethodName:  "extract_audio",
+		Args: []string{
+			SetArg(filepath.Join(r.Location, r.VideoPath)),
+		},
 	}
 
 	// 提取音频
-	result = python.Call()
-	if len(result) != 1 {
-		// 异常
-		source.Status = util.ErrorHappended
-		mongodb.Update(source)
-		go waiter(job)
+	go python.Call(job, extractHandle)
+}
+
+func extractHandle(job *job.Job, result []string) {
+	// 获取资源信息
+	r, err := resource.GetByKey(job.URL)
+	if err != nil {
+		// 获取资源出错
+		job.SetStatus(util.JobErrFailedToFindResource)
+		go JobSchedule(job)
 		return
 	}
 
-	// 音频提取成功, 更新数据库
-	source.AudioPath = result[0]
-	source.Status = util.Completed
-	mongodb.Update(source)
+	// 是否成功提取音频
+	if len(result) != 1 {
+		// 提取失败
+		r.SetStatus(util.ResourceErrExtractFailed)
+		job.SetStatus(util.JobErrExtractFailed)
+		go JobSchedule(job)
+		return
+	}
 
-	// 更新任务状态
-	job.Status = util.Processing
-	mongodb.Update(job)
-	go waiter(job)
+	// 音频提取成功, 更新状态
+	r.AudioPath = result[0]
+	r.SetStatus(util.ResourceCompleted)
+	job.SetStatus(util.JobExtractDone)
+	go JobSchedule(job)
 }
 
-func extractAudio() {
+func waitDownload(job *job.Job) {
+	// 获取资源信息
+	fmt.Println("========================= 获取资源信息 ===================================")
+	r, err := resource.GetByKey(job.URL)
+	if err != nil {
+		// 获取资源出错
+		job.SetStatus(util.JobErrFailedToFindResource)
+		go JobSchedule(job)
+		return
+	}
 
+	for {
+		if r.Status == util.ResourceCompleted {
+			job.SetStatus(util.JobExtractDone)
+			go JobSchedule(job)
+		} else if r.Status > util.ResourceCompleted {
+			fmt.Println("========================= 资源下载出错 ===================================")
+
+		} else {
+
+			fmt.Println("========================= 资源已经存在, 等待下载完成 ===================================")
+			time.Sleep(time.Second * 5)
+		}
+	}
+}
+
+func extractAbstract(job *job.Job) {
+	// 进行文本分析
+	go textAnalysis(job)
+	// 进行视频分析
+	// go videoAnalysis(job)
 }

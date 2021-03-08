@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 	"swc/mongodb"
 	"swc/mongodb/job"
@@ -25,7 +26,7 @@ func PostJob(c *gin.Context) {
 		URL:      json.URL,
 		KeyWords: json.KeyWords,
 		JobID:    json.GetID(),
-		Status:   util.Downloading,
+		Status:   util.JobStart,
 	}
 
 	// 插入数据库
@@ -35,7 +36,8 @@ func PostJob(c *gin.Context) {
 	}
 
 	// 开始下载
-	go server.TaskSchedule(server.Start, job)
+	fmt.Println("========================= 接收到请求, 开始下载 ===================================")
+	go server.JobSchedule(&job)
 
 	// 返回 JobID
 	c.JSON(http.StatusOK, gin.H{"jobid": job.JobID})

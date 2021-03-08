@@ -18,12 +18,31 @@ var (
 	SavePath = "/home/download"
 )
 
-// 状态值
+// 任务状态值
 const (
-	Downloading    = "Downloading"
-	Processing     = "Processing"
-	Completed      = "Completed"
-	ErrorHappended = "ErrorHappended"
+	JobStart              = 0 // 创建资源, 写入数据库
+	JobDownloadMedia      = 1 // 下载资源
+	JobExisted            = 2 // 文件已存在
+	JobExtractAudio       = 3 // 提取音频
+	JobExtractDone        = 4 // 音频提取成功
+	JobAbstractextraction = 5 // 提取摘要
+	JobCompleted          = 6 // 完成
+
+	JobErrFailedToFindResource       = 100 // 从数据库中读取时发生错误
+	JobErrDownloadFailed             = 101 // 资源下载失败
+	JobErrExtractFailed              = 102 // 音频提取失败
+	JobErrTextAnalysisFailed         = 103 // 文本分析失败
+	JobErrTextAnalysisReadJSONFailed = 104 // 文本分析JSON读取失败
+)
+
+// 资源状态值
+const (
+	ResourceDownloading = 0 // 下载资源
+	ResourceExtracting  = 1 // 提取音频
+	ResourceCompleted   = 2 // 完成
+
+	ResourceErrDownloadFailed = 100 // 资源下载失败
+	ResourceErrExtractFailed  = 101 // 音频提取失败
 )
 
 // SetWorkSpace 获取当前路径

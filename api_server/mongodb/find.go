@@ -15,12 +15,12 @@ func FindOneByfilter(collName string, filter interface{}) (data bson.M, err erro
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 搜索
 	err = coll.FindOne(ctx, filter).Decode(&data)
@@ -37,13 +37,13 @@ func FindOne(document Key) (data bson.M, err error) {
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
 	collName := document.GetCollName()
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 搜索
 	KeyTag := document.GetKeyTag()

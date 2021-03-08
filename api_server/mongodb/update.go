@@ -21,13 +21,13 @@ func Update(document Key) (err error) {
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
 	collName := document.GetCollName()
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 替换
 	KeyTag := document.GetKeyTag()
@@ -68,12 +68,12 @@ func UpdateOne(rawData, newData Key) (err error) {
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 替换
 	_, err = coll.ReplaceOne(ctx, bson.M{KeyTag: KeyValue}, newData)
@@ -90,12 +90,12 @@ func ReplaceOneByFilter(collName string, filter interface{}, update interface{})
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 替换
 	_, err = coll.ReplaceOne(ctx, filter, update)
@@ -112,12 +112,12 @@ func UpdateOneByFilter(collName string, filter interface{}, update interface{}) 
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 替换
 	_, err = coll.UpdateOne(ctx, filter, update)

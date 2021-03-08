@@ -33,14 +33,14 @@ const (
 	MongoDBURI = "mongodb://localhost:27017"
 )
 
-// initDB return one *DBAccessor
-func initDB() (dba *DBAccessor) {
+// InitDB return one *DBAccessor
+func InitDB() (dba *DBAccessor) {
 	dba = &DBAccessor{}
 	return
 }
 
-// connect to mongodb
-func (dba *DBAccessor) connect() (err error) {
+// Connect to mongodb
+func (dba *DBAccessor) Connect() (err error) {
 	// 创建 mongodb client
 	dba.client, err = mongo.NewClient(options.Client().ApplyURI(MongoDBURI))
 	if err != nil {
@@ -65,8 +65,8 @@ func (dba *DBAccessor) connect() (err error) {
 	return nil
 }
 
-// disconnect to mongodb
-func (dba *DBAccessor) disconnect() (err error) {
+// Disconnect to mongodb
+func (dba *DBAccessor) Disconnect() (err error) {
 	// 设置连接时间阈值, 这段时间内连接失败会重新尝试
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -78,8 +78,8 @@ func (dba *DBAccessor) disconnect() (err error) {
 	return nil
 }
 
-// getCollection return a collection according to name
-func (dba *DBAccessor) getCollection(name string) (coll *mongo.Collection) {
+// GetCollection return a collection according to name
+func (dba *DBAccessor) GetCollection(name string) (coll *mongo.Collection) {
 
 	// 连接数据库
 	db := dba.client.Database(SWCDB)
@@ -109,13 +109,13 @@ func HaveExisted(document Key) (b bool) {
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 collName collection 的句柄
 	collName := document.GetCollName()
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 	result := coll.FindOne(ctx, bson.M{document.GetKeyTag(): document.GetKeyValue()})
 	if result.Err() == nil {
 		return true
