@@ -23,7 +23,7 @@ import cv2
 parser = argparse.ArgumentParser("Pytorch code for unsupervised video summarization with REINFORCE")
 # Dataset options
 parser.add_argument('-i', '--input', type=str, default='', help="input video")
-parser.add_argument('-o', '--output',type=str, default='./makedata/', help="output video")
+parser.add_argument('-o', '--output', type=str, default='output/', help="output video")
 # Misc
 parser.add_argument('--seed', type=int, default=1, help="random seed (default: 1)")
 parser.add_argument('--gpu', type=str, default='0', help="which gpu devices to use")
@@ -39,7 +39,7 @@ parser.add_argument('--model', type=str, default='model/best_model_epoch60.pth.t
 parser.add_argument('--save-dir', type=str, default='output/', help="path to save output (default: 'output/')")
 parser.add_argument('--use-cpu', action='store_true', help="use cpu device")
 
-parser.add_argument('--save-name', default='',help="'generate video '")
+parser.add_argument('--save-name', default='', help="'generate video '")
 parser.add_argument('--fps', type=int, default=30, help="frames per second")
 parser.add_argument('--width', type=int, default=640, help="frame width")
 parser.add_argument('--height', type=int, default=480, help="frame height")
@@ -51,7 +51,9 @@ args = parser.parse_args()
 torch.manual_seed(args.seed)
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 use_gpu = torch.cuda.is_available()
-if args.use_cpu: use_gpu = False
+if args.use_cpu:
+    use_gpu = False
+
 
 def main(video_path=''):
     sys.stdout = Logger(osp.join(args.save_dir, 'log_test.txt'))
@@ -74,7 +76,7 @@ def main(video_path=''):
 
     print("Load model")
     model = DSN(in_dim=args.input_dim, hid_dim=args.hidden_dim, num_layers=args.num_layers, cell=args.rnn_cell)
-    print("Model size: {:.5f}M".format(sum(p.numel() for p in model.parameters())/1000000.0))
+    print("Model size: {:.5f}M".format(sum(p.numel() for p in model.parameters()) / 1000000.0))
 
     if args.model:
         print("Loading checkpoint from '{}'".format(args.model))
@@ -88,9 +90,10 @@ def main(video_path=''):
     evaluate(model, dataset, test_keys, use_gpu)
     print("Summary")
     if video_path:
-        video2summary(os.path.join(args.save_dir,'result.h5'),video_path ,args.save_dir)####
+        video2summary(os.path.join(args.save_dir, 'result.h5'), video_path, args.save_dir)  ####
     else:
-        video2summary(os.path.join(args.save_dir,'result.h5'),args.input ,args.save_dir)
+        video2summary(os.path.join(args.save_dir, 'result.h5'), args.input, args.save_dir)
+
 
 def evaluate(model, dataset, test_keys, use_gpu):
     with torch.no_grad():
@@ -101,7 +104,7 @@ def evaluate(model, dataset, test_keys, use_gpu):
         if not os.path.isdir(args.save_dir):
             os.mkdir(args.save_dir)
 
-        h5_res = h5py.File(os.path.join(args.save_dir,'result.h5'), 'w')
+        h5_res = h5py.File(os.path.join(args.save_dir, 'result.h5'), 'w')
         for key in dataset.keys():
             print(dataset[key].name)
             print(dataset[key])
@@ -131,6 +134,7 @@ def evaluate(model, dataset, test_keys, use_gpu):
 
     h5_res.close()
 
+
 def frm2video(video_dir, summary, vid_writer):
     print('[INFO] Video Summary')
     video_capture = cv2.VideoCapture(video_dir)
@@ -142,8 +146,10 @@ def frm2video(video_dir, summary, vid_writer):
             vid_writer.write(frm)
         else:
             count += 1
-    print('[OUTPUT] total {} frame, ignore {} frame'.format(len(summary)-count, count))
-def video2summary(h5_dir,video_dir,output_dir):
+    print('[OUTPUT] total {} frame, ignore {} frame'.format(len(summary) - count, count))
+
+
+def video2summary(h5_dir, video_dir, output_dir):
     if not osp.exists(output_dir):
         os.mkdir(output_dir)
 
@@ -159,8 +165,8 @@ def video2summary(h5_dir,video_dir,output_dir):
         if not os.path.isdir(osp.join(output_dir, video_name)):
             os.mkdir(osp.join(output_dir, video_name))
         vid_writer = cv2.VideoWriter(
-            osp.join(output_dir,video_name, args.save_name),
-            cv2.VideoWriter_fourcc('M','P','4','V'),
+            osp.join(output_dir, video_name, args.save_name),
+            cv2.VideoWriter_fourcc('M', 'P', '4', 'V'),
             fps,
             (args.width, args.height),
         )
@@ -168,7 +174,8 @@ def video2summary(h5_dir,video_dir,output_dir):
         vid_writer.release()
     h5_res.close()
 
-def video_summarize_api(video_path):
+
+def video_summarize_api(video_path, save_dir='/tmp/compressed_video/'):
     name_video = video_path.split('/')[-1].split('.')[0]
     args.dataset = os.path.join(args.output, name_video + '.h5')
     args.save_name = name_video + '.mp4'
@@ -177,17 +184,19 @@ def video_summarize_api(video_path):
         gen.generate_dataset()
         gen.h5_file.close()
     main(video_path)
-    return 'output/' + name_video + '/' + name_video + '.mp4'
+    return save_dir + name_video + '.mp4'
+
 
 if __name__ == '__main__':
-    print("making dataset...........")
-    name_video = args.input.split('/')[-1].split('.')[0]
-    print(name_video)
-    args.dataset = os.path.join(args.output, name_video + '.h5')
-    args.save_name = name_video + '.mp4'
-    print(args)
-    if not os.path.exists(args.dataset):
-        gen = Generate_Dataset(args.input, args.dataset)
-        gen.generate_dataset()
-        gen.h5_file.close()
-    main()
+    print(video_summarize_api("dataset/1.mp4"))
+    # print("making dataset...........")
+    # name_video = args.input.split('/')[-1].split('.')[0]
+    # print(name_video)
+    # args.dataset = os.path.join(args.output, name_video + '.h5')
+    # args.save_name = name_video + '.mp4'
+    # print(args)
+    # if not os.path.exists(args.dataset):
+    #     gen = Generate_Dataset(args.input, args.dataset)
+    #     gen.generate_dataset()
+    #     gen.h5_file.close()
+    # main()
