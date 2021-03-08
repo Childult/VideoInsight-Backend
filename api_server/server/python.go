@@ -5,30 +5,38 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strconv"
 	"strings"
+	"swc/logger"
+	"swc/mongodb/job"
 	"swc/util"
 )
 
-// PyArgs is a interface for arguments of python program
-type PyArgs interface {
-	String() string
-}
-
-// PyWorker python worker
+// PyWorker 用于调用 python
 type PyWorker struct {
 	PackagePath string
 	FileName    string
 	MethodName  string
-	Args        []PyArgs
+	Args        []string
 }
 
-func (py *PyWorker) getCmd() (r string) {
-	len := len(py.Args)
-	args := make([]string, len)
-	for i, arg := range py.Args {
-		args[i] = arg.String()
+// SetArg 设置 python 调用的参数, 数字<1>转为<"1">, 字符串<"1">转为<'"1"'>
+func SetArg(i interface{}) string {
+	var result string
+	switch i := i.(type) {
+	case string:
+		result = fmt.Sprintf("'%s'", string(i))
+	case int:
+		result = fmt.Sprintf("%s", strconv.Itoa(i))
 	}
+	return result
+}
 
+// PythonHandlerFunc python 回调函数
+type PythonHandlerFunc func(job *job.Job, result []string)
+
+// getCmd 执行命令设置, 调用采用`python -c`, 直接在命令行里写一个简单调用的代码
+func (py *PyWorker) getCmd() (r string) {
 	r = fmt.Sprintf("\n"+
 		"import sys\n"+
 		"sys.path.append('%s')\n"+
@@ -36,119 +44,71 @@ func (py *PyWorker) getCmd() (r string) {
 		"import %s as worker\n"+
 		"result = worker.%s(%s)\n"+
 		"print('GoTOPythonDelimiter',result,end='')\n",
-		util.WorkSpace, py.PackagePath, py.FileName, py.MethodName, strings.Join(args, ","))
+		util.WorkSpace, py.PackagePath, py.FileName, py.MethodName, strings.Join(py.Args, ","))
 	return
 }
 
-// CallPython will execute a python program
-func CallPython(packagePath string, fileName string, methodName string, args []PyArgs) (result []string) {
-	var py PyWorker = PyWorker{PackagePath: packagePath, FileName: fileName, MethodName: methodName, Args: args}
-	return py.Call()
-}
-
-// Call 采用管道, 可以实时输出
-func (py *PyWorker) Call() (result []string) {
-	cmd := exec.Command("python3", "-c", py.getCmd())
-	fmt.Println(cmd.Args)
+// Call 采用管道和`-c`参数, 可以实时输出
+func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
+	cmd := exec.Command("python3", "-u", "-c", py.getCmd())
+	logger.Info.Println(cmd.Args)
 
 	// 获取标准输出
-
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		panic(err)
 	}
 
+	// 获取标准错误输出
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		panic(err)
 	}
 
-	err = cmd.Start()
-	if err != nil {
-		panic(err)
-	}
-	result = Stdout(stdout)
-	Stdout(stderr)
-	cmd.Wait()
-	return
-}
+	// 错误直接输出
+	go EasyOut(stderr)
 
-// ReCall 采用管道, 可以实时输出
-func (py *PyWorker) ReCall(handles ...PythonHandlerFunc) {
-	cmd := exec.Command("python3", "-c", py.getCmd())
-	fmt.Println(cmd.Args)
-
-	// 获取标准输出
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		panic(err)
-	}
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		panic(err)
-	}
-
-	err = cmd.Start()
-	if err != nil {
-		panic(err)
-	}
-	for _, handle := range handles {
-		go ReStdout(stdout, handle)
-	}
-	for _, handle := range handles {
-		go ReStdout(stderr, handle)
-	}
-	cmd.Wait()
-	return
-}
-
-// ArgsTemp is a demo type
-type ArgsTemp string
-
-// String toString
-func (i ArgsTemp) String() string {
-	return fmt.Sprintf("'%s'", string(i))
-}
-
-// Stdout 处理标准输出
-// func Stdout(r io.Reader) (result []string) {
-// 	scanner := bufio.NewScanner(r)
-// 	for scanner.Scan() {
-// 		result = append(result, scanner.Text())
-// 	}
-// 	return
-// }
-
-// Stdout 处理标准输出
-func Stdout(r io.Reader) (result []string) {
-	Delimiter := "GoTOPythonDelimiter "
-	len := len(Delimiter)
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		s := scanner.Text()
-		fmt.Println(s)
-		index := strings.Index(s, Delimiter)
-		if index != -1 {
-			result = append(result, s[index+len:])
+	// 标准输出进行处理
+	if handles == nil {
+		go HandleOut(stdout, job, nil)
+	} else {
+		for _, handle := range handles {
+			go HandleOut(stdout, job, handle)
 		}
 	}
+
+	// 开始调用
+	err = cmd.Start()
+	if err != nil {
+		panic(err)
+	}
+	cmd.Wait()
 	return
 }
 
-// ReStdout 处理标准输出
-func ReStdout(r io.Reader, handles PythonHandlerFunc) {
+// HandleOut 处理标准输出
+func HandleOut(r io.Reader, job *job.Job, handles PythonHandlerFunc) {
 	var result []string
 	Delimiter := "GoTOPythonDelimiter "
 	len := len(Delimiter)
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		s := scanner.Text()
-		fmt.Println(s)
+		logger.Info.Println(s)
 		index := strings.Index(s, Delimiter)
 		if index != -1 {
 			result = append(result, s[index+len:])
 		}
+	}
+	if handles != nil {
+		go handles(job, result)
+	}
+}
+
+// EasyOut 简单输出
+func EasyOut(r io.Reader) {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		logger.Info.Println(scanner.Text())
 	}
 }

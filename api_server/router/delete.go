@@ -20,11 +20,7 @@ func DeleteJob(c *gin.Context) {
 
 	// 构建任务
 	job := job.Job{
-		DeviceID: json.DeviceID,
-		URL:      json.URL,
-		KeyWords: json.KeyWords,
-		JobID:    json.GetID(),
-		Status:   util.Downloading,
+		JobID: json.GetID(),
 	}
 	// 删除数据库
 	err = mongodb.DeleteOne(job)

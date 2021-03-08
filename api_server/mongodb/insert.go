@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// InsertOne as indicated by the name
+// InsertOne 通过主键插入数据, 主键已存在时报错
 func InsertOne(document Key) (err error) {
 	// 检查数据是否存在
 	exists := HaveExisted(document)
@@ -19,13 +19,13 @@ func InsertOne(document Key) (err error) {
 	defer cancel()
 
 	// 初始化数据库
-	dba := initDB()
-	dba.connect()
-	defer dba.disconnect()
+	dba := InitDB()
+	dba.Connect()
+	defer dba.Disconnect()
 
 	// 获取 media collection 的句柄
 	collName := document.GetCollName()
-	coll := dba.getCollection(collName)
+	coll := dba.GetCollection(collName)
 
 	// 插入
 	_, err = coll.InsertOne(ctx, document)
