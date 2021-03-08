@@ -131,7 +131,7 @@ func extractHandle(job *job.Job, result []string) {
 	// 音频提取成功, 更新状态
 	r.AudioPath = result[0]
 	r.SetStatus(util.ResourceCompleted)
-	job.SetStatus(util.JobExtractDone)
+	job.SetStatus(util.JobExtractAudioDone)
 	go JobSchedule(job)
 }
 
@@ -140,7 +140,7 @@ func waitDownload(job *job.Job) {
 	// 获取资源信息
 	r, err := resource.GetByKey(job.URL)
 	if err != nil {
-		// 获取资源出错
+		logger.Error.Println("获取资源出错")
 		job.SetStatus(util.JobErrFailedToFindResource)
 		go JobSchedule(job)
 		return
@@ -148,12 +148,21 @@ func waitDownload(job *job.Job) {
 
 	for {
 		if r.Status == util.ResourceCompleted {
-			job.SetStatus(util.JobExtractDone)
+			logger.Info.Println("资源下载完成")
+			job.SetStatus(util.JobExtractAudioDone)
 			go JobSchedule(job)
-		} else if r.Status > util.ResourceCompleted {
-
+		} else if r.Status == util.ResourceErrDownloadFailed {
+			logger.Error.Println("资源下载失败")
+			job.SetStatus(util.JobErrDownloadFailed)
+			go JobSchedule(job)
+		} else if r.Status == util.ResourceErrDownloadFailed {
+			logger.Error.Println("音频提取失败")
+			job.SetStatus(util.JobErrExtractFailed)
+			go JobSchedule(job)
 		} else {
+			logger.Warning.Println("资源下载中, 等待完成")
 			time.Sleep(time.Second * 5)
+			r.Refresh()
 		}
 	}
 }

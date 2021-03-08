@@ -74,13 +74,13 @@ func (r *Resource) SetStatus(status int32) {
 }
 
 // SetAbsText 设置文本摘要哈希地址并更新
-func (r *Resource) SetAbsText(key string) {
-	r.AbsText = key
+func (r *Resource) SetAbsText(hash string) {
+	r.AbsText = hash
 	mongodb.Update(r)
 }
 
 // SetAbsVideo 设置视频摘要哈希地址并更新
-func (r *Resource) SetAbsVideo(key string) {
-	r.AbsVideo = key
+func (r *Resource) SetAbsVideo(hash string) {
+	r.AbsVideo = hash
 	mongodb.Update(r)
 }

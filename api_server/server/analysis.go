@@ -14,12 +14,14 @@ import (
 	"swc/util"
 )
 
+// textAbstract 用于存储文本分析的结果
 type textAbstract struct {
 	AText     string `json:"AText"`
 	TAbstract string `json:"TAbstract"`
 	Error     string `json:"Error"`
 }
 
+// textAnalysis 文本分析
 func textAnalysis(job *job.Job) {
 	// 获取资源信息
 	r, err := resource.GetByKey(job.URL)
@@ -42,10 +44,20 @@ func textAnalysis(job *job.Job) {
 
 	// 文本分析
 	logger.Info.Println(python)
-	// go python.Call(job, textHandle)
+	go python.Call(job, textHandle)
 }
 
+// textHandle 文本分析的回调
 func textHandle(job *job.Job, result []string) {
+	// 获取资源信息
+	r, err := resource.GetByKey(job.URL)
+	if err != nil {
+		// 获取资源出错
+		job.SetStatus(util.JobErrFailedToFindResource)
+		go JobSchedule(job)
+		return
+	}
+
 	if len(result) != 1 {
 		job.SetStatus(util.JobErrTextAnalysisFailed)
 		go JobSchedule(job)
@@ -53,7 +65,7 @@ func textHandle(job *job.Job, result []string) {
 	}
 
 	var text textAbstract
-	err := json.Unmarshal([]byte(result[0]), &text)
+	err = json.Unmarshal([]byte(result[0]), &text)
 	if err != nil {
 		job.SetStatus(util.JobErrTextAnalysisReadJSONFailed)
 		go JobSchedule(job)
@@ -67,10 +79,12 @@ func textHandle(job *job.Job, result []string) {
 		Text:     text.AText,
 		Abstract: text.TAbstract,
 	}
+	r.SetAbsText(hash)
 	job.SetAbsText(hash)
 	mongodb.InsertOne(abstext)
 }
 
+// 从 url 和 keywords 中获取哈希
 func getAbsHash(url string, keyWords []string) string {
 	var str [12]byte
 	hash := sha1.New()

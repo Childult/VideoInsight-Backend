@@ -37,13 +37,13 @@ func (j *Job) SetStatus(i int32) {
 }
 
 // SetAbsText 设置文本摘要哈希地址并更新
-func (j *Job) SetAbsText(key string) {
-	j.AbsText = key
+func (j *Job) SetAbsText(hash string) {
+	j.AbsText = hash
 	mongodb.Update(j)
 }
 
 // SetAbsVideo 设置视频摘要哈希地址并更新
-func (j *Job) SetAbsVideo(key string) {
-	j.AbsVideo = key
+func (j *Job) SetAbsVideo(hash string) {
+	j.AbsVideo = hash
 	mongodb.Update(j)
 }

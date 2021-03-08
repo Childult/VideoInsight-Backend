@@ -23,8 +23,8 @@ const (
 	JobDownloadMedia      = 1 // 下载资源
 	JobExisted            = 2 // 文件已存在
 	JobExtractAudio       = 3 // 提取音频
-	JobExtractDone        = 4 // 音频提取成功
-	JobAbstractextraction = 5 // 提取摘要
+	JobExtractAudioDone   = 4 // 音频提取成功
+	JobAbstractExtraction = 5 // 提取摘要
 	JobCompleted          = 6 // 完成
 
 	JobErrFailedToFindResource       = 100 // 从数据库中读取时发生错误
