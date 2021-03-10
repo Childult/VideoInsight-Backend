@@ -145,4 +145,4 @@ def extract_keyframes(video_path: str, save_dir: str) -> [str]:
 
 
 if __name__ == '__main__':
-    print(extract_keyframes('output/1/1.mp4', 'output/'))
+    print(extract_keyframes('/home/download/123.mp4', '/home/download/'))

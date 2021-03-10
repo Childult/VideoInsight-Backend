@@ -19,13 +19,14 @@ var (
 
 // 任务状态值
 const (
-	JobStart              = 0 // 创建资源, 写入数据库
-	JobDownloadMedia      = 1 // 下载资源
-	JobExisted            = 2 // 文件已存在
-	JobExtractAudio       = 3 // 提取音频
-	JobExtractAudioDone   = 4 // 音频提取成功
-	JobAbstractExtraction = 5 // 提取摘要
-	JobCompleted          = 6 // 完成
+	JobStart                      = 0  // 创建资源, 写入数据库
+	JobDownloadMedia              = 1  // 下载资源
+	JobExisted                    = 2  // 文件已存在
+	JobExtractAudio               = 3  // 提取音频
+	JobExtractAudioDone           = 4  // 音频提取成功
+	JobTextAbstractExtractionDone = 8  // 文本摘要提取完成
+	JobVideoAbstractExtraction    = 16 // 视频摘要提取完成
+	JobCompleted                  = 32 // 完成
 
 	JobErrFailedToFindResource       = 100 // 从数据库中读取时发生错误
 	JobErrDownloadFailed             = 101 // 资源下载失败

@@ -10,16 +10,16 @@ type AbsText struct {
 }
 
 // GetKeyTag 返回主键标签
-func (media AbsText) GetKeyTag() string {
+func (at AbsText) GetKeyTag() string {
 	return "hash"
 }
 
 // GetKeyValue 返回主键值
-func (media AbsText) GetKeyValue() string {
-	return media.Hash
+func (at AbsText) GetKeyValue() string {
+	return at.Hash
 }
 
 // GetCollName 返回数据库名称
-func (media AbsText) GetCollName() string {
+func (at AbsText) GetCollName() string {
 	return "abstract_text"
 }

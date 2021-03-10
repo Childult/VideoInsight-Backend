@@ -172,5 +172,5 @@ func extractAbstract(job *job.Job) {
 	// 进行文本分析
 	go textAnalysis(job)
 	// 进行视频分析
-	// go videoAnalysis(job)
+	go videoAnalysis(job)
 }

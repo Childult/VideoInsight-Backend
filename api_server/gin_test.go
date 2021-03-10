@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"swc/logger"
 	"swc/mongodb"
 	"swc/mongodb/job"
 	"swc/mongodb/resource"
@@ -16,18 +17,28 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func TestPython(t *testing.T) {
+func TestVideoAbstract(t *testing.T) {
 	mongodb.SWCDB = "test"
+	logger.InitLog()
 	// python 测试
 	python := server.PyWorker{
-		PackagePath: "/home/download/",
-		FileName:    "python",
-		MethodName:  "myPrint",
-		Args:        []string{server.SetArg("1")},
+		PackagePath: "/home/backend/SWC-Backend/video_analysis/",
+		FileName:    "api",
+		MethodName:  "generate_abstract_from_video",
+		Args: []string{
+			server.SetArg("/home/download/123.mp4"),
+			server.SetArg("/home/download/"),
+		},
 	}
-	job := job.Job{}
-	python.Call(&job)
-	fmt.Printf("%+v, %+v\n", python, job)
+	jobs := job.Job{
+		DeviceID: "json.DeviceID",
+		URL:      "json.URL",
+		KeyWords: []string{},
+		JobID:    "json.GetID()",
+		Status:   0,
+	}
+	python.Call(&jobs)
+	fmt.Printf("%+v, %+v\n", python, jobs)
 }
 
 func TestDeleteAll(t *testing.T) {

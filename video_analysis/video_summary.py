@@ -177,8 +177,8 @@ def video2summary(h5_dir, video_dir, output_dir):
 
 def video_summarize_api(video_path, save_dir='/tmp/compressed_video/'):
     name_video = video_path.split('/')[-1].split('.')[0]
-    args.dataset = os.path.join(args.output, name_video + '.h5')
-    args.save_name = name_video + '.mp4'
+    args.dataset = os.path.join(name_video + '.h5')
+    args.save_name = name_video + '-com.mp4'
     if not os.path.exists(args.dataset):
         gen = Generate_Dataset(video_path, args.dataset)
         gen.generate_dataset()
@@ -188,7 +188,7 @@ def video_summarize_api(video_path, save_dir='/tmp/compressed_video/'):
 
 
 if __name__ == '__main__':
-    print(video_summarize_api("dataset/1.mp4"))
+    print(video_summarize_api("/home/download/123.mp4"))
     # print("making dataset...........")
     # name_video = args.input.split('/')[-1].split('.')[0]
     # print(name_video)

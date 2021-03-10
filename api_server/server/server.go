@@ -24,7 +24,7 @@ func JobSchedule(job *job.Job) {
 	case util.JobExtractAudioDone: // 音频提取成功, 提取文本摘要和视频摘要
 		go extractAbstract(job)
 
-	case util.JobAbstractExtraction:
+	case util.JobTextAbstractExtractionDone:
 
 	case util.JobCompleted: // 任务完成
 		logger.Info.Printf("任务完成. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
