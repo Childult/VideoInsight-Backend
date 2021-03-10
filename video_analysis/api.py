@@ -17,7 +17,7 @@ def generate_abstract_from_video(file: str, save_dir: str) -> [str]:
     }
     try:
         # 对视频进行摘要，得到浓缩版视频
-        compressed_video = video_summarize(file)
+        compressed_video = video_summarize(file, save_dir)
     except Exception as e:
         ret['Error'] = 'failed to summarize the video: ' + str(e)
     else:
@@ -58,14 +58,15 @@ def scene_text_spotting(file: str) -> [str]:
     return ['Not implemented.']
 
 
-def video_summarize(file: str) -> str:
+def video_summarize(file: str, save_dir: str) -> str:
     """
     视频摘要
     :param file: 视频文件路径 dataset/taichi.mp4
+    :param save_dir:
     :return: 生成的视频路径 output/taichi/taichi.mp4
     """
-    return vsumm.video_summarize_api(file)
+    return vsumm.video_summarize_api(file, save_dir)
 
 
 if __name__ == '__main__':
-    print(generate_abstract_from_video('dataset/3.mp4', 'output/'))
+    print(generate_abstract_from_video('/swc/code/video_analysis/dataset/3.mp4', '/swc/resource/'))

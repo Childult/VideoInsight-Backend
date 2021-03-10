@@ -29,12 +29,12 @@ parser = argparse.ArgumentParser("Training")
 parser.add_argument('-d', '--dataset', type=str, default='', help="path to dataset file h5")
 args = parser.parse_args()
 
+
 def main():
     if not config.EVALUATE:
         sys.stdout = Logger(os.path.join(config.SAVE_DIR, 'log_train.txt'))
     else:
         sys.stdout = Logger(os.path.join(config.SAVE_DIR, 'log_test.txt'))
-
 
     if use_gpu:
         print("Currently using GPU {}".format(config.GPU))
@@ -55,19 +55,20 @@ def main():
     splits = read_json(config.SPLIT)
 
     if not config.TEST:
-        assert config.SPLIT_ID < len(splits), "split_id (got {}) exceeds {}".format(config.SPLIT_ID, len(splits ))
+        assert config.SPLIT_ID < len(splits), "split_id (got {}) exceeds {}".format(config.SPLIT_ID, len(splits))
         split = splits[config.SPLIT_ID]
         train_keys = split["train_keys"]
         test_keys = split["test_keys"]
-        print("# total videos {}. # train videos {}. # test videos {}.".format(num_videos, len(train_keys), len(test_keys)))
+        print("# total videos {}. # train videos {}. # test videos {}.".format(num_videos, len(train_keys),
+                                                                               len(test_keys)))
 
     print("Initialize model")
-    model = DSN(in_dim=config.INPUT_DIM, hid_dim=config.HIDDEN_DIM, num_layers = config.NUM_LAYERS, cell=config.RNN_CELL)
-    print("Model Size: {:.5f}M".format(sum(p.numel() for p in model.parameters())/1000000.0))
+    model = DSN(in_dim=config.INPUT_DIM, hid_dim=config.HIDDEN_DIM, num_layers=config.NUM_LAYERS, cell=config.RNN_CELL)
+    print("Model Size: {:.5f}M".format(sum(p.numel() for p in model.parameters()) / 1000000.0))
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
     if config.STEP_SIZE > 0:
-        scheduler = lr_scheduler.StepLR(optimizer, step_size= config.STEP_SIZE, gamma=config.GAMMA)
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=config.STEP_SIZE, gamma=config.GAMMA)
 
     if config.RESUME:
         print("Loading checkpoint from '{}'".format(config.RESUME))
@@ -84,7 +85,6 @@ def main():
         test(model, dataset, ['video_1'], use_gpu)
         return
 
-
     # Evaluate
     if config.EVALUATE:
         print("Evaluate only")
@@ -95,8 +95,8 @@ def main():
     print("===> Start training")
     start_time = time.time()
     model.train()
-    baselines = {key: 0. for key in train_keys} # baseline rewards for videos
-    reward_writers = {key: [] for key in train_keys} # record reward changes for each video
+    baselines = {key: 0. for key in train_keys}  # baseline rewards for videos
+    reward_writers = {key: [] for key in train_keys}  # record reward changes for each video
 
     for epoch in range(start_epoch, config.MAX_EPOCH):
         indices = np.arange(len(train_keys))
@@ -106,13 +106,13 @@ def main():
         print(indices)
         for idx in indices:
             key = train_keys[idx]
-            seq = dataset[key]['features'][...] # sequence of features, (seq_len, dim)
-            seq = torch.from_numpy(seq).unsqueeze(0) # input shape (1, seq_len, dim)
+            seq = dataset[key]['features'][...]  # sequence of features, (seq_len, dim)
+            seq = torch.from_numpy(seq).unsqueeze(0)  # input shape (1, seq_len, dim)
 
             if use_gpu: seq = seq.cuda()
-            probs = model(seq) # output shape (1, seq_len, 1)
+            probs = model(seq)  # output shape (1, seq_len, 1)
 
-            cost = config.BETA * (probs.mean() - 0.5) ** 2 # minimize summary length penalty term [Eq.11]
+            cost = config.BETA * (probs.mean() - 0.5) ** 2  # minimize summary length penalty term [Eq.11]
             m = Bernoulli(probs)
 
             epis_rewards = []
@@ -123,9 +123,9 @@ def main():
                 # try:
                 reward = compute_reward(seq, actions, use_gpu=use_gpu)
                 # except:
-                    # pass
+                # pass
                 expected_reward = log_probs.mean() * (reward - baselines[key])
-                cost -= expected_reward # minimize negative expected reward
+                cost -= expected_reward  # minimize negative expected reward
                 epis_rewards.append(reward.item())
 
             optimizer.zero_grad()
@@ -133,11 +133,12 @@ def main():
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
             optimizer.step()
 
-            baselines[key] = 0.9 * baselines[key] + 0.1 * np.mean(epis_rewards) # update baseline reward via moving average
+            baselines[key] = 0.9 * baselines[key] + 0.1 * np.mean(
+                epis_rewards)  # update baseline reward via moving average
             reward_writers[key].append(np.mean(epis_rewards))
 
         epoch_reward = np.mean([reward_writers[key][epoch] for key in train_keys])
-        print("epoch {}/{}\t reward {}\t".format(epoch+1, config.MAX_EPOCH, epoch_reward))
+        print("epoch {}/{}\t reward {}\t".format(epoch + 1, config.MAX_EPOCH, epoch_reward))
 
     write_json(reward_writers, os.path.join(config.SAVE_DIR, 'rewards.json'))
     # evaluate(model, dataset, test_keys, use_gpu)
@@ -184,9 +185,8 @@ def evaluate(model, dataset, test_keys, use_gpu):
             fm, _, _ = vsum_tool.evaluate_summary(machine_summary, user_summary, eval_metric)
             fms.append(fm)
 
-
             if config.VERBOSE:
-                table.append([key_idx+1, key, "{:.1%}".format(fm)])
+                table.append([key_idx + 1, key, "{:.1%}".format(fm)])
 
             if config.SAVE_RESULTS:
                 h5_res.create_dataset(key + '/score', data=probs)
@@ -204,13 +204,14 @@ def evaluate(model, dataset, test_keys, use_gpu):
 
     return mean_fm
 
+
 def test(model, dataset, test_data, use_gpu):
     print("===> Test")
     with torch.no_grad():
         model.eval()
 
         if config.SAVE_RESULTS:
-            h5_res = h5py.File(os.path.join(config.SAVE_DIR, 'result_test.h5'),'w')
+            h5_res = h5py.File(os.path.join(config.SAVE_DIR, 'result_test.h5'), 'w')
 
         for key_idx, key in enumerate(test_data):
             seq = dataset[key]['features'][...]
@@ -225,7 +226,7 @@ def test(model, dataset, test_data, use_gpu):
             nfps = dataset[key]['n_frame_per_seg'][...].tolist()
             positions = dataset[key]['picks'][...]
 
-            machine_summary = vsum_tool.generate_summary(probs, cps, num_frames, nfps,positions)
+            machine_summary = vsum_tool.generate_summary(probs, cps, num_frames, nfps, positions)
 
             if config.SAVE_RESULTS:
                 h5_res.create_dataset(key + '/score', data=probs)
@@ -233,6 +234,7 @@ def test(model, dataset, test_data, use_gpu):
 
         if config.SAVE_RESULTS:
             h5_res.close()
+
 
 if __name__ == '__main__':
     main()

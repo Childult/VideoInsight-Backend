@@ -18,6 +18,7 @@ import cv2
 import numpy as np
 import h5py
 
+
 class Generate_Dataset:
     def __init__(self, video_path, save_path):
         self.resnet = ResNet()
@@ -38,9 +39,8 @@ class Generate_Dataset:
             self.video_list.append(video_path)
 
         for idx, file_name in enumerate(self.video_list):
-            self.dataset['video_{}'.format(idx+1)] = {}
-            self.h5_file.create_group('video_{}'.format(idx+1))
-
+            self.dataset['video_{}'.format(idx + 1)] = {}
+            self.h5_file.create_group('video_{}'.format(idx + 1))
 
     def _extract_feature(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -52,16 +52,16 @@ class Generate_Dataset:
 
     def _get_change_points(self, video_feat, n_frame, fps):
         n = n_frame / fps
-        m = int(math.ceil(n/2.0))
+        m = int(math.ceil(n / 2.0))
         K = np.dot(video_feat, video_feat.T)
         change_points, _ = cpd_auto(K, m, 1)
-        change_points = np.concatenate(([0], change_points, [n_frame-1]))
+        change_points = np.concatenate(([0], change_points, [n_frame - 1]))
 
         temp_change_points = []
-        for idx in range(len(change_points)-1):
-            segment = [change_points[idx], change_points[idx+1]-1]
-            if idx == len(change_points)-2:
-                segment = [change_points[idx], change_points[idx+1]]
+        for idx in range(len(change_points) - 1):
+            segment = [change_points[idx], change_points[idx + 1] - 1]
+            if idx == len(change_points) - 2:
+                segment = [change_points[idx], change_points[idx + 1]]
 
             temp_change_points.append(segment)
         change_points = np.array(list(temp_change_points))
@@ -89,8 +89,6 @@ class Generate_Dataset:
             if os.path.isdir(self.video_path):
                 video_path = os.path.join(self.video_path, video_filename)
 
-            video_basename = os.path.basename(video_path).split('.')[0]
-
             print(video_path)
             video_capture = cv2.VideoCapture(video_path)
             print('vc_keys', video_capture)
@@ -99,11 +97,10 @@ class Generate_Dataset:
             n_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
             print(n_frames)
 
-            frame_list = []
             picks = []
             video_feat = None
             video_feat_for_train = None
-            for frame_idx in tqdm(range(n_frames-1)):
+            for frame_idx in tqdm(range(n_frames - 1)):
                 success, frame = video_capture.read()
                 if success:
                     frame_feat = self._extract_feature(frame)
@@ -125,11 +122,10 @@ class Generate_Dataset:
 
             video_capture.release()
             change_points, n_frame_per_seg = self._get_change_points(video_feat, n_frames, fps)
-            self.h5_file['video_{}'.format(video_idx+1)]['features'] = list(video_feat_for_train)
-            self.h5_file['video_{}'.format(video_idx+1)]['picks'] = np.array(list(picks))
-            self.h5_file['video_{}'.format(video_idx+1)]['n_frames'] = n_frames
-            self.h5_file['video_{}'.format(video_idx+1)]['fps'] = fps
+            self.h5_file['video_{}'.format(video_idx + 1)]['features'] = list(video_feat_for_train)
+            self.h5_file['video_{}'.format(video_idx + 1)]['picks'] = np.array(list(picks))
+            self.h5_file['video_{}'.format(video_idx + 1)]['n_frames'] = n_frames
+            self.h5_file['video_{}'.format(video_idx + 1)]['fps'] = fps
             self.h5_file['video_{}'.format(video_idx + 1)]['video_name'] = video_filename.split('.')[0]
-            self.h5_file['video_{}'.format(video_idx+1)]['change_points'] = change_points
-            self.h5_file['video_{}'.format(video_idx+1)]['n_frame_per_seg'] = n_frame_per_seg
-
+            self.h5_file['video_{}'.format(video_idx + 1)]['change_points'] = change_points
+            self.h5_file['video_{}'.format(video_idx + 1)]['n_frame_per_seg'] = n_frame_per_seg

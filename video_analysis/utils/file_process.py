@@ -2,6 +2,7 @@ import sys, os
 import json
 import torch
 
+
 def write_json(splits, save_path):
     if not os.path.exists(os.path.dirname(save_path)):
         os.mkdir(os.path.dirname(save_path))
@@ -9,31 +10,11 @@ def write_json(splits, save_path):
     with open(save_path, 'w') as f:
         json.dump(splits, f, indent=4, separators=(', ', ': '))
 
+
 def read_json(fpath):
     with open(fpath, 'r') as f:
         obj = json.load(f)
     return obj
-
-class AverageMeter(object):
-    """Computes and stores the average and current value.
-
-       Code imported from https://github.com/pytorch/examples/blob/master/imagenet/main.py#L247-L262
-    """
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
 
 
 def save_checkpoint(state, fpath='checkpoint.pth.tar'):
@@ -82,4 +63,3 @@ class Logger(object):
         self.console.close()
         if self.file is not None:
             self.file.close()
-

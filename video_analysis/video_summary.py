@@ -6,16 +6,12 @@ import os.path as osp
 import argparse
 import sys
 import h5py
-import numpy as np
-from tabulate import tabulate
 from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 
-from utils.utils import Logger, read_json, write_json, save_checkpoint
 from networkss.DSN import *
-from utils.rewards import compute_reward
 from utils import vsum_tool
 from utils.generate_dataset import Generate_Dataset
 import cv2
@@ -35,7 +31,7 @@ parser.add_argument('--rnn-cell', type=str, default='lstm', help="RNN cell type 
 
 parser.add_argument('-d', '--dataset', type=str, help="path to h5 dataset (required)")
 
-parser.add_argument('--model', type=str, default='model/best_model_epoch60.pth.tar', help="path to model file")
+parser.add_argument('--model', type=str, default='/swc/code/video_analysis/model/best_model_epoch60.pth.tar', help="path to model file")
 parser.add_argument('--save-dir', type=str, default='output/', help="path to save output (default: 'output/')")
 parser.add_argument('--use-cpu', action='store_true', help="use cpu device")
 
@@ -56,7 +52,6 @@ if args.use_cpu:
 
 
 def main(video_path=''):
-    sys.stdout = Logger(osp.join(args.save_dir, 'log_test.txt'))
     print("==========\nArgs:{}\n==========".format(args))
 
     if use_gpu:
@@ -68,7 +63,6 @@ def main(video_path=''):
 
     print("Initialize dataset {}".format(args.dataset))
     dataset = h5py.File(args.dataset, 'r')
-    num_videos = len(dataset.keys())
     test_keys = []
 
     for key in dataset.keys():
@@ -82,15 +76,13 @@ def main(video_path=''):
         print("Loading checkpoint from '{}'".format(args.model))
         checkpoint = torch.load(args.model, map_location=torch.device('cpu'))
         model.load_state_dict(checkpoint)
-    else:
-        start_epoch = 0
 
     if use_gpu:
         model = nn.DataParallel(model).cuda()
     evaluate(model, dataset, test_keys, use_gpu)
     print("Summary")
-    if video_path:
-        video2summary(os.path.join(args.save_dir, 'result.h5'), video_path, args.save_dir)  ####
+    if video_path != '':
+        video2summary(os.path.join(args.save_dir, 'result.h5'), video_path, args.save_dir)
     else:
         video2summary(os.path.join(args.save_dir, 'result.h5'), args.input, args.save_dir)
 
@@ -175,28 +167,18 @@ def video2summary(h5_dir, video_dir, output_dir):
     h5_res.close()
 
 
-def video_summarize_api(video_path, save_dir='/tmp/compressed_video/'):
-    name_video = video_path.split('/')[-1].split('.')[0]
-    args.dataset = os.path.join(name_video + '.h5')
-    args.save_name = name_video + '-compressed.mp4'
+def video_summarize_api(video_path, save_dir='/swc/resource/compressed/'):
+    video_name = video_path.split('/')[-1].split('.')[0]
+    args.dataset = os.path.join(save_dir, video_name + '.h5')
+    args.save_name = os.path.join(save_dir, video_name + '-compressed.mp4')
+    args.save_dir = save_dir
     if not os.path.exists(args.dataset):
         gen = Generate_Dataset(video_path, args.dataset)
         gen.generate_dataset()
         gen.h5_file.close()
     main(video_path)
-    return save_dir + name_video + '.mp4'
+    return args.save_name
 
 
 if __name__ == '__main__':
-    print(video_summarize_api("dataset/1.mp4"))
-    # print("making dataset...........")
-    # name_video = args.input.split('/')[-1].split('.')[0]
-    # print(name_video)
-    # args.dataset = os.path.join(args.output, name_video + '.h5')
-    # args.save_name = name_video + '.mp4'
-    # print(args)
-    # if not os.path.exists(args.dataset):
-    #     gen = Generate_Dataset(args.input, args.dataset)
-    #     gen.generate_dataset()
-    #     gen.h5_file.close()
-    # main()
+    print(video_summarize_api("/swc/code/video_analysis/dataset/1.mp4"))
