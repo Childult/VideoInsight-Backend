@@ -30,7 +30,8 @@ var (
 
 const (
 	// MongoDBURI mongodb 地址
-	MongoDBURI = "mongodb://localhost:27017"
+	// MongoDBURI = "mongodb://localhost:27017"
+	MongoDBURI = "mongodb://192.168.2.80:27018"
 )
 
 // InitDB 返回 DBAccessor
