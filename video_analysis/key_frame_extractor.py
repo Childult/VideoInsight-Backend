@@ -2,9 +2,6 @@
 import cv2
 import operator
 import numpy as np
-import os
-# import matplotlib.pyplot as plt
-import sys
 from scipy.signal import argrelextrema
 
 
@@ -56,9 +53,6 @@ def rel_change(a, b):
 
 
 def extract_keyframes(video_path: str, save_dir: str) -> [str]:
-    # 视频文件名
-    video_name = video_path.split('/')[-1].split('.')[0]
-
     # Setting fixed threshold criteria
     USE_THRESH = False
     # fixed threshold value
@@ -123,8 +117,6 @@ def extract_keyframes(video_path: str, save_dir: str) -> [str]:
 
     # save all keyframes as image
     cap = cv2.VideoCapture(str(video_path))
-    curr_frame = None
-    keyframes = []
     success, frame = cap.read()
     idx = 0
     count = 0
@@ -145,4 +137,4 @@ def extract_keyframes(video_path: str, save_dir: str) -> [str]:
 
 
 if __name__ == '__main__':
-    print(extract_keyframes('output/1/1.mp4', 'output/'))
+    print(extract_keyframes('/swc/code/video_analysis/dataset/1.mp4', '/swc/code/video_analysis/output/'))
