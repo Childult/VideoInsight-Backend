@@ -28,7 +28,7 @@ func JobSchedule(job *job.Job) {
 		logger.Info.Printf("任务完成. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status) // 任务完成
 
 	} else if status > util.JobCompleted {
-		logger.Error.Println("任务失败, errCode:", status)
+		logger.Error.Println("任务失败, 错误代码:", status)
 
 	}
 

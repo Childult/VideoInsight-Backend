@@ -33,8 +33,9 @@ func PostJob(c *gin.Context) {
 	// 插入数据库
 	err = mongodb.InsertOne(job)
 	if err != nil {
-		logger.Error.Printf("插入数据库失败. 原始数据: %+v\n", job)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logger.Error.Printf("插入数据库失败. 原始数据: %+v, err:%+v\n", job, err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "errorHappended"})
+		return
 	}
 
 	// 开始下载

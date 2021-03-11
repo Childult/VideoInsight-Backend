@@ -46,13 +46,13 @@ func TestDeleteAll(t *testing.T) {
 	mongodb.SWCDB = "test"
 	filter := bson.M{}
 
-	err := mongodb.DeleteOneByfilter("job", filter)
+	err := mongodb.DeleteManyByfilter("job", filter)
 	assert.Equal(t, nil, err)
 
-	err = mongodb.DeleteOneByfilter("resource", filter)
+	err = mongodb.DeleteManyByfilter("resource", filter)
 	assert.Equal(t, nil, err)
 
-	err = mongodb.DeleteOneByfilter("abstext", filter)
+	err = mongodb.DeleteManyByfilter("abstext", filter)
 	assert.Equal(t, nil, err)
 
 	data, err := mongodb.FindOneByfilter("job", filter)
@@ -139,6 +139,7 @@ func TestJob(t *testing.T) {
 
 func TestTextAnalysis(t *testing.T) {
 	mongodb.SWCDB = "test"
+	logger.InitLog()
 
 	tests := []struct {
 		method string
@@ -155,14 +156,6 @@ func TestTextAnalysis(t *testing.T) {
 			header: map[string]string{"Content-Type": "application/json;charset=utf-8"},
 			status: 200,
 			result: `{"jobid":"[184 146 89 194 239 164 154 224 205 61 182 101]"}`,
-		},
-		{
-			method: "DELETE",
-			url:    "/job",
-			body:   `{"deviceid":"1", "url":"https://www.bilibili.com/video/BV18r4y1A7Uv"}`,
-			header: map[string]string{"Content-Type": "application/json;charset=utf-8"},
-			status: 200,
-			result: "",
 		},
 	}
 

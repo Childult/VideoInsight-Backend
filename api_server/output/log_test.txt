@@ -1,9 +1,0 @@
-==========
-Args:Namespace(dataset='123.h5', fps=30, gpu='0', height=480, hidden_dim=256, input='', input_dim=2048, model='model/best_model_epoch60.pth.tar', num_layers=1, output='output/', rnn_cell='lstm', save_dir='output/', save_name='123-com.mp4', seed=1, train_data=False, use_cpu=False, width=640)
-==========
-Currently using CPU
-Initialize dataset 123.h5
-Load model
-Model size: 4.72320M
-Loading checkpoint from 'model/best_model_epoch60.pth.tar'
-GoTOPythonDelimiter {"VAbstract": [], "Error": "failed to summarize the video: [Errno 2] No such file or directory: 'model/best_model_epoch60.pth.tar'"}
