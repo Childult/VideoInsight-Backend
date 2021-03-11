@@ -2,7 +2,7 @@ package mongodb
 
 import (
 	"context"
-	"log"
+	"swc/logger"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -30,7 +30,7 @@ var (
 
 const (
 	// MongoDBURI mongodb 地址
-	MongoDBURI = "mongodb://localhost:27018"
+	MongoDBURI = "mongodb://192.168.2.80:27018"
 )
 
 // InitDB 返回 DBAccessor
@@ -44,7 +44,7 @@ func (dba *DBAccessor) Connect() (err error) {
 	// 创建 mongodb client
 	dba.client, err = mongo.NewClient(options.Client().ApplyURI(MongoDBURI))
 	if err != nil {
-		log.Fatal(err)
+		logger.Error.Println(err.Error())
 	}
 
 	// 设置连接时间阈值, 这段时间内连接失败会重新尝试
@@ -53,13 +53,13 @@ func (dba *DBAccessor) Connect() (err error) {
 	// 利用 client 连接 mongodb, 超时会产生错误
 	err = dba.client.Connect(ctx)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error.Println(err.Error())
 	}
 
 	// ping 测试
 	err = dba.client.Ping(ctx, readpref.Primary())
 	if err != nil {
-		log.Fatal(err)
+		logger.Error.Println(err.Error())
 	}
 
 	return nil
@@ -72,7 +72,7 @@ func (dba *DBAccessor) Disconnect() (err error) {
 	defer cancel()
 	err = dba.client.Disconnect(ctx)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error.Println(err.Error())
 	}
 
 	return nil
@@ -97,7 +97,7 @@ func (dba *DBAccessor) ShowAllDatabaseNames() (databases []string) {
 	defer cancel()
 	databases, err := dba.client.ListDatabaseNames(ctx, bson.M{})
 	if err != nil {
-		log.Fatal(err)
+		logger.Error.Println(err.Error())
 	}
 	return
 }

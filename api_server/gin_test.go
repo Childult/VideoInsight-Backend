@@ -44,6 +44,7 @@ func TestVideoAbstract(t *testing.T) {
 func TestDeleteAll(t *testing.T) {
 	// 删除所有数据
 	mongodb.SWCDB = "test"
+	logger.InitLog()
 	filter := bson.M{}
 
 	err := mongodb.DeleteManyByfilter("job", filter)
@@ -53,6 +54,9 @@ func TestDeleteAll(t *testing.T) {
 	assert.Equal(t, nil, err)
 
 	err = mongodb.DeleteManyByfilter("abstext", filter)
+	assert.Equal(t, nil, err)
+
+	err = mongodb.DeleteManyByfilter("absvideo", filter)
 	assert.Equal(t, nil, err)
 
 	data, err := mongodb.FindOneByfilter("job", filter)
@@ -68,6 +72,12 @@ func TestDeleteAll(t *testing.T) {
 	assert.Equal(t, expectdata, data)
 
 	data, err = mongodb.FindOneByfilter("abstext", filter)
+	expectErr = fmt.Errorf("Not Found <%+v>", filter)
+	expectdata = bson.M(nil)
+	assert.Equal(t, expectErr, err)
+	assert.Equal(t, expectdata, data)
+
+	data, err = mongodb.FindOneByfilter("absvideo", filter)
 	expectErr = fmt.Errorf("Not Found <%+v>", filter)
 	expectdata = bson.M(nil)
 	assert.Equal(t, expectErr, err)
