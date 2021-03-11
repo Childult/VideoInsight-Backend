@@ -165,7 +165,7 @@ func TestTextAnalysis(t *testing.T) {
 			body:   `{"deviceid":"1", "url":"https://www.bilibili.com/video/BV18r4y1A7Uv"}`,
 			header: map[string]string{"Content-Type": "application/json;charset=utf-8"},
 			status: 200,
-			result: `{"jobid":"[184 146 89 194 239 164 154 224 205 61 182 101]"}`,
+			result: `{"job_id":"[184 146 89 194 239 164 154 224 205 61 182 101]"}`,
 		},
 	}
 
