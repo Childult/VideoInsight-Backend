@@ -1,11 +1,8 @@
 package server
 
 import (
-	"crypto/sha1"
 	"encoding/json"
-	"fmt"
 	"path/filepath"
-	"strings"
 	"swc/logger"
 	"swc/mongodb"
 	"swc/mongodb/abstext"
@@ -67,33 +64,21 @@ func textHandle(job *job.Job, result []string) {
 
 	var text textAbstract
 	err = json.Unmarshal([]byte(result[0]), &text)
-	if err != nil {
+	if err != nil || text.Error != "" {
 		job.SetStatus(util.JobErrTextAnalysisReadJSONFailed)
 		go JobSchedule(job)
 		return
 	}
-	hash := getAbsHash(job.URL, job.KeyWords)
-	abstext := abstext.AbsText{
-		Hash:     hash,
-		URL:      job.URL,
-		KeyWords: job.KeyWords,
-		Text:     text.AText,
-		Abstract: text.TAbstract,
-	}
-	r.SetAbsText(hash)
-	job.SetAbsText(hash)
+	abstext := abstext.NewAbsText(job.URL, text.AText, text.TAbstract, job.KeyWords)
+	r.SetAbsText(abstext.Hash)
+	job.SetAbsText(abstext.Hash)
 	mongodb.InsertOne(abstext)
-}
-
-// 从 url 和 keywords 中获取哈希
-func getAbsHash(url string, keyWords []string) string {
-	var str [12]byte
-	hash := sha1.New()
-	textStr := url + strings.Join(keyWords, "")
-	hash.Write([]byte(textStr))
-	copy(str[:], hash.Sum([]byte(""))[0:12])
-
-	return fmt.Sprintf("%v", str)
+	if job.Status&util.JobVideoAbstractExtractionDone != 0 {
+		job.SetStatus(util.JobCompleted)
+		go JobSchedule(job)
+	} else {
+		job.SetStatus(job.Status | util.JobTextAbstractExtractionDone)
+	}
 }
 
 // videoAbstract 用于存储视频摘要的结果
@@ -132,14 +117,6 @@ func videoAnalysis(job *job.Job) {
 // videoHandle 视频分析的回调
 func videoHandle(job *job.Job, result []string) {
 	// 获取资源信息
-	r, err := resource.GetByKey(job.URL)
-	if err != nil {
-		// 获取资源出错
-		job.SetStatus(util.JobErrFailedToFindResource)
-		go JobSchedule(job)
-		return
-	}
-
 	if len(result) != 1 {
 		job.SetStatus(util.JobErrTextAnalysisFailed)
 		go JobSchedule(job)
@@ -147,18 +124,21 @@ func videoHandle(job *job.Job, result []string) {
 	}
 
 	var videoPath videoAbstract
-	err = json.Unmarshal([]byte(result[0]), &videoPath)
-	if err != nil {
+	err := json.Unmarshal([]byte(result[0]), &videoPath)
+	if err != nil || videoPath.Error != "" {
 		job.SetStatus(util.JobErrTextAnalysisReadJSONFailed)
 		go JobSchedule(job)
 		return
 	}
-	hash := getAbsHash(job.URL, job.KeyWords)
 	absvideo := absvideo.AbsVideo{
 		URL:      job.URL,
 		Abstract: videoPath.VAbstract,
 	}
-	r.SetAbsText(hash)
-	job.SetAbsText(hash)
 	mongodb.InsertOne(absvideo)
+	if job.Status&util.JobTextAbstractExtractionDone != 0 {
+		job.SetStatus(util.JobCompleted)
+		go JobSchedule(job)
+	} else {
+		job.SetStatus(job.Status | util.JobVideoAbstractExtractionDone)
+	}
 }

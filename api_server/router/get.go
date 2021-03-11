@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetJob is used to process "/media" post requests, deviceid will be return
+// GetJob is used to process "/job" post requests, deviceid will be return
 func GetJob(c *gin.Context) {
 	// 获取数据
 	json, err := util.GetJSON(c)
@@ -30,6 +30,10 @@ func GetJob(c *gin.Context) {
 		return
 	}
 	status := data["status"]
-	c.JSON(http.StatusOK, gin.H{"status": status})
+	if status != util.JobCompleted {
+		c.JSON(http.StatusOK, gin.H{"status": status})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"status": status})
+	}
 
 }

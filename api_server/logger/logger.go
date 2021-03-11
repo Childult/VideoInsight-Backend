@@ -21,7 +21,7 @@ var (
 
 // InitLog 初始化
 func InitLog() {
-	errFile, err := os.OpenFile(filepath.Join(util.Location, "errors.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	errFile, err := os.OpenFile(filepath.Join(util.LogFile, "errors.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Open LogFile Error：", err)
 	}

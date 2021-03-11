@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"swc/logger"
 	"swc/mongodb"
+	"swc/mongodb/abstext"
+	"swc/mongodb/absvideo"
 	"swc/mongodb/job"
 	"swc/mongodb/resource"
 	"swc/util"
@@ -169,8 +171,29 @@ func waitDownload(job *job.Job) {
 
 func extractAbstract(job *job.Job) {
 	logger.Info.Printf("音频提取成功, 提取文本摘要和视频摘要. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
-	// 进行文本分析
-	go textAnalysis(job)
-	// 进行视频分析
-	go videoAnalysis(job)
+	// 判断资源是否已经存在
+	if abstext.HaveAbsTextExisted(job.URL, job.KeyWords) {
+		if job.Status&util.JobVideoAbstractExtractionDone != 0 {
+			job.SetStatus(util.JobCompleted)
+			go JobSchedule(job)
+		} else {
+			job.SetStatus(job.Status | util.JobTextAbstractExtractionDone)
+		}
+	} else {
+		// 不存在就进行文本分析, 否则忽略
+		go textAnalysis(job)
+	}
+
+	// 判断资源是否已经存在
+	if absvideo.HaveAbsVideoExisted(job.URL) {
+		if job.Status&util.JobTextAbstractExtractionDone != 0 {
+			job.SetStatus(util.JobCompleted)
+			go JobSchedule(job)
+		} else {
+			job.SetStatus(job.Status | util.JobVideoAbstractExtractionDone)
+		}
+	} else {
+		// 不存在就进行视频分析, 否则忽略
+		go videoAnalysis(job)
+	}
 }

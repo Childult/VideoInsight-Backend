@@ -3,7 +3,6 @@ package main
 import (
 	"swc/logger"
 	"swc/router"
-	"swc/util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,8 +26,7 @@ func GinRouter() (r *gin.Engine) {
 func main() {
 	// 初始化日志
 	logger.InitLog()
-	// 设置工作路径
-	util.SetWorkSpace()
+
 	r := GinRouter()
 	// 默认监听本地(ipv4 + ipv6) 8080 端口
 	r.Run()
