@@ -65,7 +65,12 @@ def video_summarize(file: str, save_dir: str) -> str:
     """
     return vsumm.video_summarize_api(file, save_dir)
 
+<<<<<<< HEAD
 
 if __name__ == '__main__':
     # print(generate_abstract_from_video('/swc/code/video_analysis/dataset/3.mp4', '/swc/resource/'))
     print(generate_abstract_from_video('/swc/code/api_server/test/test_media.mp4', '/swc/resource/test/'))
+=======
+# if __name__ == '__main__':
+#     print(generate_abstract_from_video('/swc/code/video_analysis/dataset/3.mp4', '/swc/resource/'))
+>>>>>>> 215b651... support GPU and use grpc
