@@ -22,7 +22,7 @@ func PostJob(c *gin.Context) {
 	}
 
 	// 构建任务
-	job := job.Job{
+	newJob := job.Job{
 		DeviceID: json.DeviceID,
 		URL:      json.URL,
 		KeyWords: json.KeyWords,
@@ -30,17 +30,27 @@ func PostJob(c *gin.Context) {
 		Status:   util.JobStart,
 	}
 
+	// 查找数据
+	oldJob, err := job.GetByKey(newJob.JobID)
+	if err == nil {
+		// 找到过去的数据
+		c.JSON(http.StatusBadRequest, gin.H{"warning": "Exists"})
+		go server.JobSchedule(&oldJob)
+		return
+	}
+
 	// 插入数据库
-	err = mongodb.InsertOne(job)
+	err = mongodb.InsertOne(newJob)
 	if err != nil {
-		logger.Error.Printf("插入数据库失败. 原始数据: %+v\n", job)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logger.Error.Printf("插入数据库失败. 原始数据: %+v, err:%+v\n", newJob, err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "errorHappended"})
+		return
 	}
 
 	// 开始下载
-	logger.Info.Printf("接收到请求, 开始下载. [URL: %s] [JobID: %s]\n", job.URL, job.JobID)
-	go server.JobSchedule(&job)
+	logger.Info.Printf("接收到请求, 开始下载. [URL: %s] [JobID: %s]\n", newJob.URL, newJob.JobID)
+	go server.JobSchedule(&newJob)
 
 	// 返回 JobID
-	c.JSON(http.StatusOK, gin.H{"job_id": job.JobID})
+	c.JSON(http.StatusOK, gin.H{"job_id": newJob.JobID})
 }

@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"swc/logger"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -32,6 +33,7 @@ func DeleteOne(document Key) (err error) {
 	// 删除
 	_, err = coll.DeleteOne(ctx, bson.M{document.GetKeyTag(): document.GetKeyValue()})
 	if err != nil {
+		logger.Error.Println(err.Error())
 		return fmt.Errorf("Failed to delete <%s>", document)
 	}
 	return
@@ -54,6 +56,7 @@ func DeleteOneByfilter(collName string, filter interface{}) (err error) {
 	// 删除
 	_, err = coll.DeleteOne(ctx, filter)
 	if err != nil {
+		logger.Error.Println(err.Error())
 		return fmt.Errorf("Failed to delete")
 	}
 	return
@@ -76,6 +79,7 @@ func DeleteManyByfilter(collName string, filter interface{}) (err error) {
 	// 删除
 	_, err = coll.DeleteMany(ctx, filter)
 	if err != nil {
+		logger.Error.Println(err.Error())
 		return fmt.Errorf("Failed to delete")
 	}
 	return

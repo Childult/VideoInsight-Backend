@@ -1,35 +1,63 @@
 package router
 
 import (
+	"io/ioutil"
 	"net/http"
+	"os"
 	"swc/mongodb"
+	"swc/mongodb/abstext"
+	"swc/mongodb/absvideo"
 	"swc/mongodb/job"
+	"swc/mongodb/resource"
 	"swc/util"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
-// GetJob is used to process "/media" post requests, deviceid will be return
+// GetJob is used to process "/job" post requests, deviceid will be return
 func GetJob(c *gin.Context) {
 	// 获取数据
-	json, err := util.GetJSON(c)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	// 构建任务
-	job := job.Job{
-		JobID: json.GetID(),
-	}
+	jobID := c.Param("job_id")
+	mongodb.SWCDB = "test"
 
 	// 查找数据
-	data, err := mongodb.FindOne(job)
+	job, err := job.GetByKey(jobID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		// 获取资源出错
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Not Found"})
 		return
 	}
-	status := data["status"]
-	c.JSON(http.StatusOK, gin.H{"status": status})
+	if job.Status == util.JobCompleted {
+		at := abstext.AbsText{Hash: job.AbsText}
+		text, err := mongodb.FindOne(at)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Not Found Text Abstract"})
+			return
+		}
+
+		r, _ := resource.GetByKey(job.URL)
+		av := absvideo.AbsVideo{URL: job.URL}
+		video, err := mongodb.FindOne(av)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Not Found Video Abstract"})
+			return
+		}
+		prefix := r.Location
+		pictures := video["abstract"]
+		pics := make(map[string]string)
+
+		for _, x := range pictures.(bson.A) {
+			file, _ := os.Open(prefix + x.(string))
+			content, _ := ioutil.ReadAll(file)
+			pics[x.(string)] = string(content)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"text":     text,
+			"pictures": pics,
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{"status": job.Status})
 
 }

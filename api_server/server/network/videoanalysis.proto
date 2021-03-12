@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package = "swc/server/network";
+
+service VideoAnalysis {
+  rpc GetStaticVideoAbstract(VideoInfo) returns (Result) {}
+}
+
+message VideoInfo {
+    // job的唯一ID
+    string job_id = 1;
+    // 视频文件路径
+    string file = 2;
+    // 静态视频摘要（图片）的保存目录，需确保该目录已经存在
+    string save_dir = 3;
+}
+
+message Result {
+    // job的唯一ID
+    string job_iD = 1;
+    // 静态视频摘要文件名列表
+    repeated string pic_name = 2;
+    // 错误信息
+    string error = 3;
+}
