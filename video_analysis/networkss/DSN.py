@@ -4,6 +4,7 @@ from torch.nn import functional as F
 
 __all__ = ['DSN']
 
+
 class DSN(nn.Module):
     """ Deep Summarization Network """
 
@@ -16,7 +17,7 @@ class DSN(nn.Module):
         elif cell == 'gru':
             self.rnn = nn.GRU(in_dim, hid_dim, num_layers=num_layers, bidirectional=True, batch_first=True)
 
-        self.fc = nn.Linear(hid_dim*2, 1)
+        self.fc = nn.Linear(hid_dim * 2, 1)
 
     def forward(self, x):
         h, _ = self.rnn(x)
