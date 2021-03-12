@@ -8,13 +8,14 @@ pre-trained ResNet
 """
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 class ResNet(nn.Module):
     """
     Args:
         fea_type: string, resnet101 or resnet 152
     """
 
-    def __init__(self, fea_type = 'resnet152'):
+    def __init__(self, fea_type='resnet152'):
         super(ResNet, self).__init__()
         self.fea_type = fea_type
         # rescale and normalize transformation
