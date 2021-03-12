@@ -8,7 +8,7 @@ service VideoAnalysis {
 
 message VideoInfo {
     // job的唯一ID
-    string job_iD = 1;
+    string job_id = 1;
     // 视频文件路径
     string file = 2;
     // 静态视频摘要（图片）的保存目录，需确保该目录已经存在

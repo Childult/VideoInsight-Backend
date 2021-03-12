@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,9 +15,37 @@ import (
 	"testing"
 	"time"
 
+	pb "swc/server/network"
+
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
+	"google.golang.org/grpc"
 )
+
+func TestGRPC(t *testing.T) {
+	// address := "localhost:50051"
+	address := "192.168.2.80:50051"
+	jobID := "12306"
+	filePath := "/swc/code/video_analysis/dataset/4.mp4"
+	savaPath := "/swc/resource/"
+
+	// Set up a connection to the server.
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	c := pb.NewVideoAnalysisClient(conn)
+
+	// Contact the server and print out its response.
+	// ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// defer cancel()
+	r, err := c.GetStaticVideoAbstract(context.TODO(), &pb.VideoInfo{JobId: jobID, File: filePath, SaveDir: savaPath})
+	if err != nil {
+		log.Fatalf("could not call: %v", err)
+	}
+	log.Println("Get: ", r.GetJobID(), r.GetPicName(), r.GetError())
+}
 
 // videoTest 用于存储视频摘要的结果
 type videoTest struct {

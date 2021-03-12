@@ -10,9 +10,10 @@ import (
 
 // 资源定位
 const (
-	LogFile   = "/swc/log/"     // 日志保存位置
-	WorkSpace = "/swc/code/"    // 工作目录, 用于访问其他文件(如python)
-	Location  = "/swc/resource" // 资源存储位置
+	LogFile     = "/swc/log/"       // 日志保存位置
+	WorkSpace   = "/swc/code/"      // 工作目录, 用于访问其他文件(如python)
+	Location    = "/swc/resource"   // 资源存储位置
+	GRPCAddress = "localhost:50051" // gRPC 调用地址
 )
 
 // 任务状态值
@@ -26,13 +27,15 @@ const (
 	JobVideoAbstractExtractionDone = 16 // 视频摘要提取完成
 	JobCompleted                   = 32 // 完成
 
-	JobErrFailedToFindResource        = 100 // 从数据库中读取时发生错误
-	JobErrDownloadFailed              = 101 // 资源下载失败
-	JobErrExtractFailed               = 102 // 音频提取失败
-	JobErrTextAnalysisFailed          = 103 // 文本分析失败
-	JobErrTextAnalysisReadJSONFailed  = 104 // 文本分析JSON读取失败
-	JobErrVideoTextAnalysisFailed     = 105 // 文本分析失败
-	JobErrVideoAnalysisReadJSONFailed = 106 // 视频分析JSON读取失败
+	JobErrFailedToFindResource           = 100 // 从数据库中读取时发生错误
+	JobErrDownloadFailed                 = 101 // 资源下载失败
+	JobErrExtractFailed                  = 102 // 音频提取失败
+	JobErrTextAnalysisFailed             = 103 // 文本分析失败
+	JobErrTextAnalysisReadJSONFailed     = 104 // 文本分析JSON读取失败
+	JobErrVideoTextAnalysisFailed        = 105 // 文本分析失败
+	JobErrVideoAnalysisReadJSONFailed    = 106 // 视频分析JSON读取失败
+	JobErrVideoAnalysisGRPCConnectFailed = 107 // 视频分析 gRPC 连接失败
+	JobErrVideoAnalysisGRPCallFailed     = 108 // 视频分析 gRPC 连接失败
 )
 
 // 资源状态值

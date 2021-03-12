@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"path/filepath"
 	"swc/logger"
@@ -9,7 +10,10 @@ import (
 	"swc/mongodb/absvideo"
 	"swc/mongodb/job"
 	"swc/mongodb/resource"
+	pb "swc/server/network"
 	"swc/util"
+
+	"google.golang.org/grpc"
 )
 
 // textAbstract 用于存储文本分析的结果
@@ -100,46 +104,42 @@ func videoAnalysis(job *job.Job) {
 	logger.Info.Printf("视频分析. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
 	// 获取资源信息
 	r, err := resource.GetByKey(job.URL)
+
+	address := util.GRPCAddress
+	jobID := job.JobID
+	filePath := filepath.Join(r.Location, r.VideoPath)
+	savaPath := r.Location
+
+	// Set up a connection to the server.
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		// 获取资源出错
-		job.SetStatus(util.JobErrFailedToFindResource)
+		logger.Error.Printf("did not connect: %v", err)
+		job.SetStatus(util.JobErrVideoAnalysisGRPCConnectFailed)
 		go JobSchedule(job)
 		return
 	}
+	defer conn.Close()
+	rpc := pb.NewVideoAnalysisClient(conn)
 
-	// 构建文本分析对象
-	python := PyWorker{
-		PackagePath: filepath.Join(util.WorkSpace, "video_analysis"),
-		FileName:    "api",
-		MethodName:  "generate_abstract_from_video",
-		Args: []string{
-			SetArg(filepath.Join(r.Location, r.VideoPath)),
-			SetArg(r.Location),
-		},
-	}
-
-	// 文本分析
-	logger.Info.Println(python)
-	go python.Call(job, textHandle)
-}
-
-// videoHandle 视频分析的回调
-func videoHandle(job *job.Job, result []string) {
-	// 获取资源信息
-	if len(result) != 1 {
-		job.SetStatus(util.JobErrVideoTextAnalysisFailed)
+	// Contact the server and print out its response.
+	rpcResult, err := rpc.GetStaticVideoAbstract(context.TODO(), &pb.VideoInfo{JobId: jobID, File: filePath, SaveDir: savaPath})
+	if err != nil {
+		logger.Error.Printf("grpc call failed: %v", err)
+		job.SetStatus(util.JobErrVideoAnalysisGRPCallFailed)
 		go JobSchedule(job)
-		return
+	}
+	logger.Info.Printf("gRPC result: %v", rpcResult)
+
+	jobid := rpcResult.GetJobID()
+	if jobid != job.JobID {
+		logger.Error.Println("JobID does not match")
+		job.SetStatus(util.JobErrVideoAnalysisGRPCallFailed)
+		go JobSchedule(job)
 	}
 
 	var videoPath videoAbstract
-	err := json.Unmarshal([]byte(result[0]), &videoPath)
-	if err != nil {
-		job.SetStatus(util.JobErrVideoAnalysisReadJSONFailed)
-		go JobSchedule(job)
-		return
-	}
-
+	videoPath.VAbstract = rpcResult.GetPicName()
+	videoPath.Error = rpcResult.GetError()
 	if videoPath.Error != "" {
 		job.SetStatus(util.JobErrVideoTextAnalysisFailed)
 		go JobSchedule(job)
