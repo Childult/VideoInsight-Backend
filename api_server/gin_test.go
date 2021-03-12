@@ -17,17 +17,57 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// videoTest 用于存储视频摘要的结果
+type videoTest struct {
+	VAbstract []string `json:"VAbstract"`
+	Error     string   `json:"Error"`
+}
+
+// videoHandle 视频分析的回调
+func videoTestHandle(job *job.Job, result []string) {
+	job.Status = 1
+}
+
+func Test(t *testing.T) {
+	mongodb.SWCDB = "test"
+	logger.InitLog()
+	// python 测试
+	python := server.PyWorker{
+		PackagePath: "/swc/resource/test",
+		FileName:    "a",
+		MethodName:  "x",
+		Args:        []string{},
+	}
+	jobs := job.Job{
+		DeviceID: "json.DeviceID",
+		URL:      "json.URL",
+		KeyWords: []string{},
+		JobID:    "json.GetID()",
+		Status:   0,
+	}
+	python.Call(&jobs, videoTestHandle)
+	for {
+		if jobs.Status != 1 {
+			time.Sleep(time.Second * 10)
+		} else {
+			break
+		}
+	}
+	fmt.Printf("%+v, %+v\n", python, jobs)
+}
+
 func TestVideoAbstract(t *testing.T) {
 	mongodb.SWCDB = "test"
 	logger.InitLog()
 	// python 测试
 	python := server.PyWorker{
-		PackagePath: "/home/backend/SWC-Backend/video_analysis/",
+		PackagePath: "/swc/code/video_analysis/",
 		FileName:    "api",
 		MethodName:  "generate_abstract_from_video",
 		Args: []string{
-			server.SetArg("/home/download/123.mp4"),
-			server.SetArg("/home/download/"),
+			// server.SetArg("/swc/code/api_server/test/test_media.mp4"),
+			server.SetArg("/swc/resource/test/media/3.mp4"),
+			server.SetArg("/swc/resource/test/go/"),
 		},
 	}
 	jobs := job.Job{
@@ -37,7 +77,14 @@ func TestVideoAbstract(t *testing.T) {
 		JobID:    "json.GetID()",
 		Status:   0,
 	}
-	python.Call(&jobs)
+	python.Call(&jobs, videoTestHandle)
+	for {
+		if jobs.Status != 1 {
+			time.Sleep(time.Second * 100)
+		} else {
+			break
+		}
+	}
 	fmt.Printf("%+v, %+v\n", python, jobs)
 }
 
@@ -151,7 +198,11 @@ func TestTextAnalysis(t *testing.T) {
 	mongodb.SWCDB = "test"
 	logger.InitLog()
 
-	tests := []struct {
+	// 启动服务器
+	router := GinRouter()
+
+	// 测试 POST
+	testPOST := struct {
 		method string
 		url    string
 		body   string
@@ -159,32 +210,56 @@ func TestTextAnalysis(t *testing.T) {
 		status int
 		result string
 	}{
-		{
-			method: "POST",
-			url:    "/job",
-			body:   `{"deviceid":"1", "url":"https://www.bilibili.com/video/BV18r4y1A7Uv"}`,
-			header: map[string]string{"Content-Type": "application/json;charset=utf-8"},
-			status: 200,
-			result: `{"job_id":"[184 146 89 194 239 164 154 224 205 61 182 101]"}`,
-		},
+		method: "POST",
+		url:    "/job",
+		body:   `{"deviceid":"1", "url":"https://www.bilibili.com/video/BV18r4y1A7Uv"}`,
+		header: map[string]string{"Content-Type": "application/json;charset=utf-8"},
+		status: 200,
+		result: `{"job_id":"b89259c2efa49ae0cd3db665"}`,
 	}
 
-	// 启动服务器
-	router := GinRouter()
+	fmt.Println("======================= 开始测试 POST =====================================")
+	postRecorder := httptest.NewRecorder()
+	req, _ := http.NewRequest(testPOST.method, testPOST.url, strings.NewReader(testPOST.body))
+	for key, value := range testPOST.header {
+		req.Header.Set(key, value)
+	}
+	router.ServeHTTP(postRecorder, req)
 
-	for index, test := range tests {
-		fmt.Println("====================== 开始测试第", index, "例测试数据 ==================================")
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest(test.method, test.url, strings.NewReader(test.body))
-		for key, value := range test.header {
+	assert.Equal(t, testPOST.status, postRecorder.Code)
+	assert.Equal(t, testPOST.result, postRecorder.Body.String())
+
+	// 测试 GET
+	testGET := struct {
+		method string
+		url    string
+		body   string
+		header map[string]string
+		status int
+		result string
+	}{
+		method: "GET",
+		url:    "/job/b89259c2efa49ae0cd3db665",
+		body:   `{"deviceid":"1", "url":"https://www.bilibili.com/video/BV18r4y1A7Uv"}`,
+		header: map[string]string{"Content-Type": "application/json;charset=utf-8"},
+		status: 200,
+		result: `{"status":32}`,
+	}
+
+	for {
+		getRecorder := httptest.NewRecorder()
+		req, _ := http.NewRequest(testGET.method, testGET.url, strings.NewReader(testGET.body))
+		for key, value := range testGET.header {
 			req.Header.Set(key, value)
 		}
-		router.ServeHTTP(w, req)
+		router.ServeHTTP(getRecorder, req)
 
-		assert.Equal(t, test.status, w.Code)
-		assert.Equal(t, test.result, w.Body.String())
+		if getRecorder.Body.String() == testGET.result {
+			break
+		} else {
+			fmt.Println("==============================", getRecorder.Code, getRecorder.Body.String(), "==============================")
+			time.Sleep(time.Second * 10)
+		}
 	}
 
-	// 等待输出
-	time.Sleep(time.Second * 90)
 }

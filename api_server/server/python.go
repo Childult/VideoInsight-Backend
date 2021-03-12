@@ -94,7 +94,8 @@ func HandleOut(r io.Reader, job *job.Job, handles PythonHandlerFunc) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		s := scanner.Text()
-		logger.Info.Println(s)
+		// logger.Info.Println(s)
+		// fmt.Print(s)
 		index := strings.Index(s, Delimiter)
 		if index != -1 {
 			result = append(result, s[index+len:])

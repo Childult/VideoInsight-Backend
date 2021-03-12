@@ -172,10 +172,9 @@ def video_summarize_api(video_path, save_dir='/swc/resource/compressed/'):
     args.dataset = os.path.join(save_dir, video_name + '.h5')
     args.save_name = os.path.join(save_dir, video_name + '-compressed.mp4')
     args.save_dir = save_dir
-    if not os.path.exists(args.dataset):
-        gen = Generate_Dataset(video_path, args.dataset)
-        gen.generate_dataset()
-        gen.h5_file.close()
+    gen = Generate_Dataset(video_path, args.dataset)
+    gen.generate_dataset()
+    gen.h5_file.close()
     main(video_path)
     return args.save_name
 

@@ -26,11 +26,13 @@ const (
 	JobVideoAbstractExtractionDone = 16 // 视频摘要提取完成
 	JobCompleted                   = 32 // 完成
 
-	JobErrFailedToFindResource       = 100 // 从数据库中读取时发生错误
-	JobErrDownloadFailed             = 101 // 资源下载失败
-	JobErrExtractFailed              = 102 // 音频提取失败
-	JobErrTextAnalysisFailed         = 103 // 文本分析失败
-	JobErrTextAnalysisReadJSONFailed = 104 // 文本分析JSON读取失败
+	JobErrFailedToFindResource        = 100 // 从数据库中读取时发生错误
+	JobErrDownloadFailed              = 101 // 资源下载失败
+	JobErrExtractFailed               = 102 // 音频提取失败
+	JobErrTextAnalysisFailed          = 103 // 文本分析失败
+	JobErrTextAnalysisReadJSONFailed  = 104 // 文本分析JSON读取失败
+	JobErrVideoTextAnalysisFailed     = 105 // 文本分析失败
+	JobErrVideoAnalysisReadJSONFailed = 106 // 视频分析JSON读取失败
 )
 
 // 资源状态值
@@ -65,7 +67,7 @@ func (json MessageJSON) GetHash() (result [12]byte) {
 
 // GetID 通过哈希返回唯一 ID
 func (json MessageJSON) GetID() string {
-	return fmt.Sprintf("%v", json.GetHash())
+	return fmt.Sprintf("%x", json.GetHash())
 }
 
 // GetJSON 从用户输入中构建 MessageJSON, KeyWords 为空时设为空切片 []string{}

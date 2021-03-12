@@ -21,6 +21,7 @@ type textAbstract struct {
 
 // textAnalysis 文本分析
 func textAnalysis(job *job.Job) {
+	logger.Info.Printf("文本分析. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
 	// 获取资源信息
 	r, err := resource.GetByKey(job.URL)
 	if err != nil {
@@ -64,11 +65,18 @@ func textHandle(job *job.Job, result []string) {
 
 	var text textAbstract
 	err = json.Unmarshal([]byte(result[0]), &text)
-	if err != nil || text.Error != "" {
+	if err != nil {
 		job.SetStatus(util.JobErrTextAnalysisReadJSONFailed)
 		go JobSchedule(job)
 		return
 	}
+
+	if text.Error != "" {
+		job.SetStatus(util.JobErrTextAnalysisFailed)
+		go JobSchedule(job)
+		return
+	}
+
 	abstext := abstext.NewAbsText(job.URL, text.AText, text.TAbstract, job.KeyWords)
 	r.SetAbsText(abstext.Hash)
 	job.SetAbsText(abstext.Hash)
@@ -89,6 +97,7 @@ type videoAbstract struct {
 
 // videoAnalysis 视频分析
 func videoAnalysis(job *job.Job) {
+	logger.Info.Printf("视频分析. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status)
 	// 获取资源信息
 	r, err := resource.GetByKey(job.URL)
 	if err != nil {
@@ -118,18 +127,25 @@ func videoAnalysis(job *job.Job) {
 func videoHandle(job *job.Job, result []string) {
 	// 获取资源信息
 	if len(result) != 1 {
-		job.SetStatus(util.JobErrTextAnalysisFailed)
+		job.SetStatus(util.JobErrVideoTextAnalysisFailed)
 		go JobSchedule(job)
 		return
 	}
 
 	var videoPath videoAbstract
 	err := json.Unmarshal([]byte(result[0]), &videoPath)
-	if err != nil || videoPath.Error != "" {
-		job.SetStatus(util.JobErrTextAnalysisReadJSONFailed)
+	if err != nil {
+		job.SetStatus(util.JobErrVideoAnalysisReadJSONFailed)
 		go JobSchedule(job)
 		return
 	}
+
+	if videoPath.Error != "" {
+		job.SetStatus(util.JobErrVideoTextAnalysisFailed)
+		go JobSchedule(job)
+		return
+	}
+
 	absvideo := absvideo.AbsVideo{
 		URL:      job.URL,
 		Abstract: videoPath.VAbstract,

@@ -15,7 +15,7 @@ func GinRouter() (r *gin.Engine) {
 	r.POST("/job", router.PostJob)
 
 	// 查询任务
-	r.GET("/job", router.GetJob)
+	r.GET("/job/:job_id", router.GetJob)
 
 	// 删除任务
 	r.DELETE("/job", router.DeleteJob)

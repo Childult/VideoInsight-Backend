@@ -2,9 +2,7 @@ package router
 
 import (
 	"net/http"
-	"swc/mongodb"
 	"swc/mongodb/job"
-	"swc/util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,28 +10,16 @@ import (
 // GetJob is used to process "/job" post requests, deviceid will be return
 func GetJob(c *gin.Context) {
 	// 获取数据
-	json, err := util.GetJSON(c)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	// 构建任务
-	job := job.Job{
-		JobID: json.GetID(),
-	}
+	jobID := c.Param("job_id")
 
 	// 查找数据
-	data, err := mongodb.FindOne(job)
+	job, err := job.GetByKey(jobID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		// 获取资源出错
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Not Found"})
 		return
 	}
-	status := data["status"]
-	if status != util.JobCompleted {
-		c.JSON(http.StatusOK, gin.H{"status": status})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"status": status})
-	}
+
+	c.JSON(http.StatusOK, gin.H{"status": job.Status})
 
 }

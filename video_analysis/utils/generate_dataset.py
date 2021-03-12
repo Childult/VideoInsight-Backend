@@ -104,7 +104,7 @@ class Generate_Dataset:
                 success, frame = video_capture.read()
                 if success:
                     frame_feat = self._extract_feature(frame)
-
+                    # print(frame_idx,'/',n_frames - 1)
                     if frame_idx % 15 == 0:
                         picks.append(frame_idx)
 
