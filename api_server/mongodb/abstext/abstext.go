@@ -49,7 +49,7 @@ func (at *AbsText) getAbsHash() string {
 	hash.Write([]byte(textStr))                       // 写入哈希函数
 	copy(str[:], hash.Sum([]byte(""))[0:12])          // 复制
 
-	return fmt.Sprintf("%v", str) // 转为字符串
+	return fmt.Sprintf("%x", str) // 转为字符串
 }
 
 // HaveAbsTextExisted 根据判断是否已经存在

@@ -19,7 +19,7 @@ func creatResource(job *job.Job) {
 	resource := resource.Resource{
 		URL:      job.URL,
 		Status:   util.ResourceDownloading,
-		Location: filepath.Join(util.Location, strconv.FormatInt(time.Now().Unix(), 10)),
+		Location: filepath.Join(util.Location, strconv.FormatInt(time.Now().Unix(), 10)) + "/",
 	}
 
 	// 检查资源是否存在

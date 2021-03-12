@@ -3,12 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"swc/logger"
 	"swc/mongodb"
+	"swc/mongodb/abstext"
+	"swc/mongodb/absvideo"
 	"swc/mongodb/job"
 	"swc/mongodb/resource"
 	"swc/server"
@@ -21,6 +25,83 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"google.golang.org/grpc"
 )
+
+func TestPicture(t *testing.T) {
+	mongodb.SWCDB = "test"
+	logger.InitLog()
+
+	job, _ := job.GetByKey("b89259c2efa49ae0cd3db665")
+	av := absvideo.AbsVideo{URL: job.URL}
+	video, _ := mongodb.FindOne(av)
+	r, _ := resource.GetByKey("https://www.bilibili.com/video/BV18r4y1A7Uv")
+
+	prefix := r.Location
+	pictures := video["abstract"]
+	pics := make(map[string]string)
+
+	fmt.Println(prefix)
+	for _, x := range pictures.(bson.A) {
+		file, _ := os.Open(prefix + x.(string))
+		content, _ := ioutil.ReadAll(file)
+		pics[x.(string)] = string(content)
+	}
+	a := pictures.(bson.A)
+	fmt.Println(pics[a[1].(string)])
+
+}
+
+func TestGet(t *testing.T) {
+	mongodb.SWCDB = "test"
+	logger.InitLog()
+
+	// 启动服务器
+	router := GinRouter()
+
+	// 测试 Get
+	testGET := struct {
+		method string
+		url    string
+		body   string
+		header map[string]string
+		status int
+		result string
+	}{
+		method: "GET",
+		url:    "/job/b89259c2efa49ae0cd3db665",
+		body:   `{"deviceid":"1", "url":"https://www.bilibili.com/video/BV18r4y1A7Uv"}`,
+		header: map[string]string{"Content-Type": "application/json;charset=utf-8"},
+		status: 200,
+		result: `{"status":32}`,
+	}
+
+	for {
+		getRecorder := httptest.NewRecorder()
+		req, _ := http.NewRequest(testGET.method, testGET.url, strings.NewReader(testGET.body))
+		for key, value := range testGET.header {
+			req.Header.Set(key, value)
+		}
+		router.ServeHTTP(getRecorder, req)
+
+		if getRecorder.Body.String() == testGET.result {
+			break
+		} else {
+			fmt.Println("==============================", getRecorder.Code, getRecorder.Body.String(), "==============================")
+			time.Sleep(time.Second * 10)
+		}
+	}
+}
+
+func TestGetText(t *testing.T) {
+	mongodb.SWCDB = "test"
+	logger.InitLog()
+	at := abstext.NewAbsText("https://www.bilibili.com/video/BV18r4y1A7Uv", "", "", []string{})
+
+	data, _ := mongodb.FindOne(at)
+	for key, value := range data {
+		fmt.Println(key, value)
+	}
+
+}
 
 func TestGRPC(t *testing.T) {
 	// address := "localhost:50051"
@@ -130,10 +211,10 @@ func TestDeleteAll(t *testing.T) {
 	err = mongodb.DeleteManyByfilter("resource", filter)
 	assert.Equal(t, nil, err)
 
-	err = mongodb.DeleteManyByfilter("abstext", filter)
+	err = mongodb.DeleteManyByfilter("abstract_text", filter)
 	assert.Equal(t, nil, err)
 
-	err = mongodb.DeleteManyByfilter("absvideo", filter)
+	err = mongodb.DeleteManyByfilter("abstract_video", filter)
 	assert.Equal(t, nil, err)
 
 	data, err := mongodb.FindOneByfilter("job", filter)
@@ -148,13 +229,13 @@ func TestDeleteAll(t *testing.T) {
 	assert.Equal(t, expectErr, err)
 	assert.Equal(t, expectdata, data)
 
-	data, err = mongodb.FindOneByfilter("abstext", filter)
+	data, err = mongodb.FindOneByfilter("abstract_text", filter)
 	expectErr = fmt.Errorf("Not Found <%+v>", filter)
 	expectdata = bson.M(nil)
 	assert.Equal(t, expectErr, err)
 	assert.Equal(t, expectdata, data)
 
-	data, err = mongodb.FindOneByfilter("absvideo", filter)
+	data, err = mongodb.FindOneByfilter("abstract_video", filter)
 	expectErr = fmt.Errorf("Not Found <%+v>", filter)
 	expectdata = bson.M(nil)
 	assert.Equal(t, expectErr, err)
