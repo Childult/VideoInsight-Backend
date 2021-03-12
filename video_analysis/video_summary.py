@@ -31,7 +31,8 @@ parser.add_argument('--rnn-cell', type=str, default='lstm', help="RNN cell type 
 
 parser.add_argument('-d', '--dataset', type=str, help="path to h5 dataset (required)")
 
-parser.add_argument('--model', type=str, default='/swc/code/video_analysis/model/best_model_epoch60.pth.tar', help="path to model file")
+parser.add_argument('--model', type=str, default='/swc/code/video_analysis/model/best_model_epoch60.pth.tar',
+                    help="path to model file")
 parser.add_argument('--save-dir', type=str, default='output/', help="path to save output (default: 'output/')")
 parser.add_argument('--use-cpu', action='store_true', help="use cpu device")
 
@@ -45,6 +46,7 @@ parser.add_argument('--train-data', action='store_true', help="")
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 use_gpu = torch.cuda.is_available()
 if args.use_cpu:
@@ -79,7 +81,7 @@ def main(video_path=''):
 
     if use_gpu:
         model = nn.DataParallel(model).cuda()
-    evaluate(model, dataset, test_keys, use_gpu)
+    evaluate(model, dataset, test_keys)
     print("Summary")
     if video_path != '':
         video2summary(os.path.join(args.save_dir, 'result.h5'), video_path, args.save_dir)
@@ -87,7 +89,7 @@ def main(video_path=''):
         video2summary(os.path.join(args.save_dir, 'result.h5'), args.input, args.save_dir)
 
 
-def evaluate(model, dataset, test_keys, use_gpu):
+def evaluate(model, dataset, test_keys):
     with torch.no_grad():
         model.eval()
         fms = []
@@ -103,7 +105,8 @@ def evaluate(model, dataset, test_keys, use_gpu):
         for key_idx, key in enumerate(test_keys):
             seq = dataset[key]['features'][...]
             seq = torch.from_numpy(seq).unsqueeze(0)
-            if use_gpu: seq = seq.cuda()
+            if use_gpu:
+                seq = seq.cuda()
             probs = model(seq)
             probs = probs.data.cpu().squeeze().numpy()
 
@@ -172,10 +175,9 @@ def video_summarize_api(video_path, save_dir='/swc/resource/compressed/'):
     args.dataset = os.path.join(save_dir, video_name + '.h5')
     args.save_name = os.path.join(save_dir, video_name + '-compressed.mp4')
     args.save_dir = save_dir
-    if not os.path.exists(args.dataset):
-        gen = Generate_Dataset(video_path, args.dataset)
-        gen.generate_dataset()
-        gen.h5_file.close()
+    gen = Generate_Dataset(video_path, args.dataset)
+    gen.generate_dataset()
+    gen.h5_file.close()
     main(video_path)
     return args.save_name
 

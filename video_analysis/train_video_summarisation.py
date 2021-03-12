@@ -23,7 +23,8 @@ from utils import vsum_tool
 torch.manual_seed(config.SEED)
 os.environ["CUDA_VISIBLE_DEVCIES"] = config.GPU
 use_gpu = torch.cuda.is_available()
-if config.USE_CPU: use_gpu = False
+if config.USE_CPU:
+    use_gpu = False
 
 parser = argparse.ArgumentParser("Training")
 parser.add_argument('-d', '--dataset', type=str, default='', help="path to dataset file h5")

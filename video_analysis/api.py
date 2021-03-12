@@ -1,10 +1,8 @@
-import json
-
 import video_summary as vsumm
 import key_frame_extractor as keyframe_extractor
 
 
-def generate_abstract_from_video(file: str, save_dir: str) -> [str]:
+def generate_abstract_from_video(file: str, save_dir: str) -> dict:
     """
     根据视频文件，生成静态视频摘要（图片）。
     :param file: 视频文件路径
@@ -27,7 +25,7 @@ def generate_abstract_from_video(file: str, save_dir: str) -> [str]:
         except Exception as e:
             ret['Error'] = 'failed to extract key frames: ' + str(e)
 
-    return json.dumps(ret)
+    return ret
 
 
 def extract_key_frame(file: str, save_dir: str) -> [str]:
@@ -67,6 +65,5 @@ def video_summarize(file: str, save_dir: str) -> str:
     """
     return vsumm.video_summarize_api(file, save_dir)
 
-
-if __name__ == '__main__':
-    print(generate_abstract_from_video('/swc/code/video_analysis/dataset/3.mp4', '/swc/resource/'))
+# if __name__ == '__main__':
+#     print(generate_abstract_from_video('/swc/code/video_analysis/dataset/3.mp4', '/swc/resource/'))
