@@ -22,6 +22,7 @@ from utils import vsum_tool
 
 torch.manual_seed(config.SEED)
 os.environ["CUDA_VISIBLE_DEVCIES"] = config.GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 use_gpu = torch.cuda.is_available()
 if config.USE_CPU:
     use_gpu = False
@@ -174,7 +175,7 @@ def evaluate(model, dataset, test_keys, use_gpu):
 
             if use_gpu: seq = seq.cuda()
             probs = model(seq)
-            probs = probs.data.cpu().squeeze().numpy()
+            probs = probs.data.to(device).squeeze().numpy()
 
             cps = dataset[key]['change_points'][...]
             num_frames = dataset[key]['n_frames'][()]
@@ -220,7 +221,7 @@ def test(model, dataset, test_data, use_gpu):
 
             if use_gpu: seq.cuda()
             probs = model(seq)
-            probs = probs.data.cpu().squeeze().numpy()
+            probs = probs.data.to(device).squeeze().numpy()
 
             cps = dataset[key]['change_points'][...]
             num_frames = dataset[key]['n_frames'][...]

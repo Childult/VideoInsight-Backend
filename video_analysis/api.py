@@ -38,24 +38,6 @@ def extract_key_frame(file: str, save_dir: str) -> [str]:
     return keyframe_extractor.extract_keyframes(file, save_dir)
 
 
-def extract_audio(file: str) -> str:
-    """
-    提取视频文件中的音频
-    :param file: 视频所在路径
-    :return: 音频文件名
-    """
-    return 'Not implemented.'
-
-
-def scene_text_spotting(file: str) -> [str]:
-    """
-    场景文本识别
-    :param file:
-    :return: 识别的文本列表
-    """
-    return ['Not implemented.']
-
-
 def video_summarize(file: str, save_dir: str) -> str:
     """
     视频摘要
@@ -67,5 +49,4 @@ def video_summarize(file: str, save_dir: str) -> str:
 
 
 if __name__ == '__main__':
-    # print(generate_abstract_from_video('/swc/code/video_analysis/dataset/3.mp4', '/swc/resource/'))
-    print(generate_abstract_from_video('/swc/code/api_server/test/test_media.mp4', '/swc/resource/test/'))
+    print(generate_abstract_from_video('/swc/code/video_analysis/dataset/test.mp4', '/swc/resource/'))
