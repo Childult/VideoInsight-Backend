@@ -1,0 +1,37 @@
+version: "3"
+
+services:
+  db:
+    image: "mongo:4.4.4-bionic"
+    restart: always
+    ports:
+      - "27018:27017"
+    volumes:
+      - /data/jhx/swc-db:/data/db
+
+  video-analysis:
+    build:
+      context: ./video_analysis
+      cache_from:
+        - video-analysis:v1
+    restart: always
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    ports:
+      - "50051:50051"
+    volumes:
+      - /data/jhx/swc-backend/video_analysis/:/swc/code/video_analysis/
+      - /data/jhx/swc-resource/:/swc/resource/
+
+  api-server:
+    build: .
+    ports:
+      - "6666:8080"
+    depends_on:
+      - db
+      - video-analysis
+    volumes:
+      - /data/jhx/swc-backend/:/swc/code/
+      - /data/jhx/swc-resource/:/swc/resource/
+      - /data/jhx/swc-log/:/swc/log/

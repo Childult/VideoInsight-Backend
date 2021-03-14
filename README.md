@@ -19,9 +19,9 @@ pip install -r requirements.txt
 ## 使用Docker运行
 
 ```bash
-# 构建镜像
-docker build -t swc .
+# 启动容器(用于部署)
+docker-compose -p VideoInsight up -d
 
-# 启动容器
-bash start-up.sh
+# 启动容器(用于开发)
+docker-compose -f docker-compose-dev.yml -p VideoInsight up -d
 ```

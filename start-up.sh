@@ -1,2 +1,0 @@
-docker run --name swc-mongo -p 27018:27017 --restart always -v /data/jhx/swc-db:/data/db -d mongo:4.4.4-bionic
-docker run -it -v /data/jhx/swc-backend/:/swc/code/ -v /data/jhx/swc-resource/:/swc/resource/ swc:v1

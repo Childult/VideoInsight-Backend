@@ -47,7 +47,7 @@ func mediaDownload(job *job.Job) {
 	// 构建视频下载对象
 	python := PyWorker{
 		PackagePath: filepath.Join(util.WorkSpace, "video_getter"),
-		FileName:    "main",
+		FileName:    "api",
 		MethodName:  "download_video",
 		Args: []string{
 			SetArg(resource.URL),
@@ -97,8 +97,8 @@ func extractAudio(job *job.Job) {
 
 	// 构建音频提取对象
 	python := PyWorker{
-		PackagePath: filepath.Join(util.WorkSpace, "video_analysis"),
-		FileName:    "extract_audio",
+		PackagePath: filepath.Join(util.WorkSpace, "audio_analysis"),
+		FileName:    "api",
 		MethodName:  "extract_audio",
 		Args: []string{
 			SetArg(filepath.Join(r.Location, r.VideoPath)),
