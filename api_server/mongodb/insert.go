@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"swc/logger"
 	"time"
 )
 
@@ -30,6 +31,7 @@ func InsertOne(document Key) (err error) {
 	// 插入
 	_, err = coll.InsertOne(ctx, document)
 	if err != nil {
+		logger.Error.Println(err.Error())
 		return fmt.Errorf("The document <%s> insertion failed ", document)
 	}
 	return err

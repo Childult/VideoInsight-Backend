@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"swc/logger"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,6 +26,7 @@ func FindOneByfilter(collName string, filter interface{}) (data bson.M, err erro
 	// 搜索
 	err = coll.FindOne(ctx, filter).Decode(&data)
 	if err != nil {
+		logger.Error.Println(err.Error())
 		err = fmt.Errorf("Not Found <%s>", filter)
 	}
 	return data, err
@@ -50,6 +52,7 @@ func FindOne(document Key) (data bson.M, err error) {
 	KeyValue := document.GetKeyValue()
 	err = coll.FindOne(ctx, bson.M{KeyTag: KeyValue}).Decode(&data)
 	if err != nil {
+		logger.Error.Println(err.Error())
 		err = fmt.Errorf("Not Found <%s>", document)
 	}
 	return data, err

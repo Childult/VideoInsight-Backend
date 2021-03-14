@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"swc/logger"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,6 +35,7 @@ func Update(document Key) (err error) {
 	KeyValue := document.GetKeyValue()
 	_, err = coll.ReplaceOne(ctx, bson.M{KeyTag: KeyValue}, document)
 	if err != nil {
+		logger.Error.Println(err.Error())
 		return fmt.Errorf("Failed to update <%s>", document)
 	}
 	return err
@@ -78,6 +80,7 @@ func UpdateOne(rawData, newData Key) (err error) {
 	// 替换
 	_, err = coll.ReplaceOne(ctx, bson.M{KeyTag: KeyValue}, newData)
 	if err != nil {
+		logger.Error.Println(err.Error())
 		return fmt.Errorf("Failed to update from <%s> to <%s>", rawData, newData)
 	}
 	return err
@@ -100,6 +103,7 @@ func ReplaceOneByFilter(collName string, filter interface{}, update interface{})
 	// 替换
 	_, err = coll.ReplaceOne(ctx, filter, update)
 	if err != nil {
+		logger.Error.Println(err.Error())
 		return fmt.Errorf("Failed to update from <%s> to <%s>", filter, update)
 	}
 	return err
@@ -122,6 +126,7 @@ func UpdateOneByFilter(collName string, filter interface{}, update interface{}) 
 	// 替换
 	_, err = coll.UpdateOne(ctx, filter, update)
 	if err != nil {
+		logger.Error.Println(err.Error())
 		return fmt.Errorf("Failed to update from <%s> to <%s>", filter, update)
 	}
 	return err
