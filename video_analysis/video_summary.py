@@ -76,7 +76,7 @@ def main(video_path=''):
 
     if args.model:
         print("Loading checkpoint from '{}'".format(args.model))
-        checkpoint = torch.load(args.model, map_location=torch.device('cpu'))
+        checkpoint = torch.load(args.model, map_location=device)
         model.load_state_dict(checkpoint)
 
     if use_gpu:
@@ -92,9 +92,7 @@ def main(video_path=''):
 def evaluate(model, dataset, test_keys):
     with torch.no_grad():
         model.eval()
-        fms = []
 
-        table = [["No.", "Video", "F-score"]]
         if not os.path.isdir(args.save_dir):
             os.mkdir(args.save_dir)
 
@@ -183,4 +181,4 @@ def video_summarize_api(video_path, save_dir='/swc/resource/compressed/'):
 
 
 if __name__ == '__main__':
-    print(video_summarize_api("/swc/code/video_analysis/dataset/1.mp4"))
+    print(video_summarize_api("/swc/code/video_analysis/dataset/test.mp4"))

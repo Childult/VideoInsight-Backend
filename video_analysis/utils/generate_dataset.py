@@ -49,7 +49,7 @@ class Generate_Dataset:
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = cv2.resize(frame, (224, 224))
         res_pool5 = self.resnet(frame)
-        frame_feat = res_pool5.to(device).data.numpy().flatten()
+        frame_feat = res_pool5.cpu().data.numpy().flatten()
 
         return frame_feat
 
