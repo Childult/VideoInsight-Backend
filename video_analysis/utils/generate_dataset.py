@@ -82,19 +82,14 @@ class Generate_Dataset:
         pass
 
     def generate_dataset(self):
-        print('[INFO] CNN processing')
-        print(self.video_list)
         for video_idx, video_filename in enumerate(self.video_list):
             video_path = video_filename
             if 'data.h5' in video_path:
                 continue
-            print(video_path)
             if os.path.isdir(self.video_path):
                 video_path = os.path.join(self.video_path, video_filename)
 
-            print(video_path)
             video_capture = cv2.VideoCapture(video_path)
-            print('vc_keys', video_capture)
             fps = video_capture.get(cv2.CAP_PROP_FPS)
             print(fps)
             n_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))

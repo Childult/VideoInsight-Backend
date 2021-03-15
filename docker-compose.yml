@@ -4,6 +4,8 @@ services:
   swc-db:
     image: "mongo:4.4.4-bionic"
     restart: always
+    environment:
+      TZ: Asia/Shanghai
     ports:
       - "27018:27017"
     volumes:
@@ -12,12 +14,11 @@ services:
   video-analysis:
     build:
       context: ./video_analysis
-      cache_from:
-        - video-analysis:v1
     restart: always
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+      - TZ=Asia/Shanghai
     ports:
       - "50051:50051"
     volumes:
@@ -28,6 +29,8 @@ services:
     build: .
     ports:
       - "6666:8080"
+    environment:
+      TZ: Asia/Shanghai
     depends_on:
       - swc-db
       - video-analysis

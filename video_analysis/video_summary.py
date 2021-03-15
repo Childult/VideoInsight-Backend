@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
 from __future__ import print_function
+
+import logging
 import os
 import os.path as osp
 import argparse
@@ -15,6 +17,9 @@ from networkss.DSN import *
 from utils import vsum_tool
 from utils.generate_dataset import Generate_Dataset
 import cv2
+
+logger = logging.getLogger('main.vs')
+logger.setLevel(level=logging.INFO)
 
 parser = argparse.ArgumentParser("Pytorch code for unsupervised video summarization with REINFORCE")
 # Dataset options
@@ -82,7 +87,7 @@ def main(video_path=''):
     if use_gpu:
         model = nn.DataParallel(model).cuda()
     evaluate(model, dataset, test_keys)
-    print("Summary")
+    logger.info('Begin to do video summary')
     if video_path != '':
         video2summary(os.path.join(args.save_dir, 'result.h5'), video_path, args.save_dir)
     else:
@@ -173,9 +178,11 @@ def video_summarize_api(video_path, save_dir='/swc/resource/compressed/'):
     args.dataset = os.path.join(save_dir, video_name + '.h5')
     args.save_name = os.path.join(save_dir, video_name + '-compressed.mp4')
     args.save_dir = save_dir
+    logger.info('Begin to generate dataset')
     gen = Generate_Dataset(video_path, args.dataset)
     gen.generate_dataset()
     gen.h5_file.close()
+    logger.info('Done: generate dataset')
     main(video_path)
     return args.save_name
 

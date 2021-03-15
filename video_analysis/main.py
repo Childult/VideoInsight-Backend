@@ -1,10 +1,31 @@
 import asyncio
+import logging
 
 import grpc
 
 from api import generate_abstract_from_video
 from video_pb2 import VideoInfo, Result
 from video_pb2_grpc import VideoAnalysisServicer, add_VideoAnalysisServicer_to_server
+
+LOG_DIR = '/swc/log/'
+MODULE_NAME = 'video_analysis'
+
+logger = logging.getLogger('main')
+logger.setLevel(level=logging.INFO)
+
+formatter = logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s', datefmt='%m/%d %H:%M')
+
+# Handler
+levels = {
+    'info': logging.INFO,
+    'error': logging.ERROR
+}
+
+for level in levels.keys():
+    handler = logging.FileHandler(f'{LOG_DIR}{MODULE_NAME}_{level}.log')
+    handler.setLevel(levels.get(level))
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 
 class VideoService(VideoAnalysisServicer):
@@ -18,6 +39,7 @@ async def serve() -> None:
     add_VideoAnalysisServicer_to_server(VideoService(), server)
     listen_addr = '[::]:50051'
     server.add_insecure_port(listen_addr)
+    logger.info("Starting server on %s", listen_addr)
     await server.start()
     try:
         await server.wait_for_termination()

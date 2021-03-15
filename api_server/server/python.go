@@ -56,13 +56,15 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 	// 获取标准输出
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		panic(err)
+		logger.Error.Println(err)
+		return
 	}
 
 	// 获取标准错误输出
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		panic(err)
+		logger.Error.Println(err)
+		return
 	}
 
 	// 错误直接输出
@@ -80,7 +82,8 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 	// 开始调用
 	err = cmd.Start()
 	if err != nil {
-		panic(err)
+		logger.Error.Println(err)
+		return
 	}
 	cmd.Wait()
 	return
@@ -103,6 +106,7 @@ func HandleOut(r io.Reader, job *job.Job, handles PythonHandlerFunc) {
 	}
 	if handles != nil {
 		go handles(job, result)
+		return
 	}
 }
 
