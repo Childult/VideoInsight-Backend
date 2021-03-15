@@ -48,6 +48,7 @@ func textAnalysis(job *job.Job) {
 	// 文本分析
 	logger.Info.Println(python)
 	go python.Call(job, textHandle)
+	return
 }
 
 // textHandle 文本分析的回调
@@ -88,6 +89,7 @@ func textHandle(job *job.Job, result []string) {
 	if job.Status&util.JobVideoAbstractExtractionDone != 0 {
 		job.SetStatus(util.JobCompleted)
 		go JobSchedule(job)
+		return
 	} else {
 		job.SetStatus(job.Status | util.JobTextAbstractExtractionDone)
 	}
@@ -127,6 +129,7 @@ func videoAnalysis(job *job.Job) {
 		logger.Error.Printf("grpc call failed: %v", err)
 		job.SetStatus(util.JobErrVideoAnalysisGRPCallFailed)
 		go JobSchedule(job)
+		return
 	}
 	logger.Info.Printf("gRPC result: %v", rpcResult)
 
@@ -135,6 +138,7 @@ func videoAnalysis(job *job.Job) {
 		logger.Error.Println("JobID does not match")
 		job.SetStatus(util.JobErrVideoAnalysisGRPCallFailed)
 		go JobSchedule(job)
+		return
 	}
 
 	var videoPath videoAbstract
@@ -154,6 +158,7 @@ func videoAnalysis(job *job.Job) {
 	if job.Status&util.JobTextAbstractExtractionDone != 0 {
 		job.SetStatus(util.JobCompleted)
 		go JobSchedule(job)
+		return
 	} else {
 		job.SetStatus(job.Status | util.JobVideoAbstractExtractionDone)
 	}

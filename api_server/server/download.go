@@ -33,6 +33,7 @@ func creatResource(job *job.Job) {
 	mongodb.InsertOne(resource)
 	job.SetStatus(util.JobDownloadMedia)
 	go JobSchedule(job)
+	return
 }
 
 func mediaDownload(job *job.Job) {
@@ -58,6 +59,7 @@ func mediaDownload(job *job.Job) {
 	}
 
 	go python.Call(job, downloadHandle)
+	return
 }
 
 func downloadHandle(job *job.Job, result []string) {
@@ -84,6 +86,7 @@ func downloadHandle(job *job.Job, result []string) {
 	r.SetStatus(util.ResourceExtracting)
 	job.SetStatus(util.JobExtractAudio)
 	go JobSchedule(job)
+	return
 }
 
 func extractAudio(job *job.Job) {
@@ -109,6 +112,7 @@ func extractAudio(job *job.Job) {
 
 	// 提取音频
 	go python.Call(job, extractHandle)
+	return
 }
 
 func extractHandle(job *job.Job, result []string) {
@@ -135,6 +139,7 @@ func extractHandle(job *job.Job, result []string) {
 	r.SetStatus(util.ResourceCompleted)
 	job.SetStatus(util.JobExtractAudioDone)
 	go JobSchedule(job)
+	return
 }
 
 func waitDownload(job *job.Job) {
@@ -153,14 +158,17 @@ func waitDownload(job *job.Job) {
 			logger.Info.Println("资源下载完成")
 			job.SetStatus(util.JobExtractAudioDone)
 			go JobSchedule(job)
+			return
 		} else if r.Status == util.ResourceErrDownloadFailed {
 			logger.Error.Println("资源下载失败")
 			job.SetStatus(util.JobErrDownloadFailed)
 			go JobSchedule(job)
+			return
 		} else if r.Status == util.ResourceErrDownloadFailed {
 			logger.Error.Println("音频提取失败")
 			job.SetStatus(util.JobErrExtractFailed)
 			go JobSchedule(job)
+			return
 		} else {
 			logger.Warning.Println("资源下载中, 等待完成")
 			time.Sleep(time.Second * 5)
