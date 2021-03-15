@@ -1,9 +1,11 @@
 package router
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"swc/logger"
 	"swc/mongodb"
 	"swc/mongodb/abstext"
 	"swc/mongodb/absvideo"
@@ -17,6 +19,8 @@ import (
 
 // GetJob is used to process "/job" post requests, deviceid will be return
 func GetJob(c *gin.Context) {
+	logger.Info.Println("[GET] 开始")
+	var rt ReturnType
 	// 获取数据
 	jobID := c.Param("job_id")
 
@@ -24,24 +28,24 @@ func GetJob(c *gin.Context) {
 	job, err := job.GetByKey(jobID)
 	if err != nil {
 		// 获取资源出错
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Not Found"})
+		logger.Error.Println("[GET] 获取资源出错")
+		rt = ReturnType{
+			Status:  -3,
+			Message: fmt.Sprintf("非找到`job_id=%s`的任务", jobID),
+			Result:  ""}
+		c.JSON(http.StatusBadRequest, rt)
 		return
 	}
+
+	// 如果任务已经完成
 	if job.Status == util.JobCompleted {
 		at := abstext.AbsText{Hash: job.AbsText}
-		text, err := mongodb.FindOne(at)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Not Found Text Abstract"})
-			return
-		}
+		text, _ := mongodb.FindOne(at)
 
 		r, _ := resource.GetByKey(job.URL)
 		av := absvideo.AbsVideo{URL: job.URL}
-		video, err := mongodb.FindOne(av)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Not Found Video Abstract"})
-			return
-		}
+		video, _ := mongodb.FindOne(av)
+
 		prefix := r.Location
 		pictures := video["abstract"]
 		pics := make(map[string]string)
@@ -52,11 +56,19 @@ func GetJob(c *gin.Context) {
 			pics[x.(string)] = string(content)
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"text":     text,
-			"pictures": pics,
-		})
+		rt = ReturnType{
+			Status:  int(job.Status),
+			Message: util.GetJobStatus(job.Status),
+			Result: gin.H{
+				"text":     text,
+				"pictures": pics,
+			}}
+	} else {
+		rt = ReturnType{
+			Status:  int(job.Status),
+			Message: util.GetJobStatus(job.Status),
+			Result:  ""}
 	}
-	c.JSON(http.StatusOK, gin.H{"status": job.Status})
-
+	logger.Info.Printf("[GET] 返回状态%+v.\n", rt)
+	c.JSON(http.StatusOK, rt)
 }
