@@ -11,33 +11,34 @@ func JobSchedule(job *job.Job) {
 	status := job.Status
 
 	if status > util.JobCompleted {
-		logger.Error.Println("任务失败, 错误代码:", status)
+		logger.Error.Printf("[任务调度] 任务失败, 错误代码: %d, 原因: %s.\n", status, util.GetJobStatus(status))
 		return
 	}
 
-	if status == util.JobCompleted {
-		logger.Info.Printf("任务完成. [URL: %s] [JobID: %s] [Status: %d]\n", job.URL, job.JobID, job.Status) // 任务完成
+	if status&util.JobCompleted != 0 {
+		logger.Info.Printf("[任务调度] 任务完成: %+v.\n", job)
 
-	} else if status == util.JobStart {
+	} else if status&util.JobStart != 0 {
 		go creatResource(job) // 创建资源
 
-	} else if status == util.JobDownloadMedia {
+	} else if status&util.JobDownloadMedia != 0 {
 		go mediaDownload(job) // 下载视频
 
-	} else if status == util.JobExisted {
+	} else if status&util.JobExisted != 0 {
 		go waitDownload(job) // 资源已经存在, 等待下载完成
 
-	} else if status == util.JobExtractAudio {
+	} else if status&util.JobExtractAudio != 0 {
 		go extractAudio(job) // 提取音频
 
-	} else if status == util.JobExtractAudioDone {
-		go extractAbstract(job) // 音频提取成功, 提取文本摘要和视频摘要
+	} else if status&util.JobExtractAudioDone != 0 {
+		go extractTextAbstract(job)  // 音频提取成功, 提取文本摘要
+		go extractVideoAbstract(job) // 音频提取成功, 提取视频摘要
 
 	} else if status&util.JobVideoAbstractExtractionDone != 0 {
-		go textAnalysis(job) // 视频摘要完成, 但文本摘要未完成
+		go extractTextAbstract(job) // 视频摘要完成, 但文本摘要未完成
 
 	} else if status&util.JobTextAbstractExtractionDone != 0 {
-		go videoAnalysis(job) // 文本摘要完成, 但视频摘要未完成
+		go extractVideoAbstract(job) // 文本摘要完成, 但视频摘要未完成
 
 	}
 }

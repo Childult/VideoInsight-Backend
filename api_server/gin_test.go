@@ -100,14 +100,13 @@ func TestGetText(t *testing.T) {
 	for key, value := range data {
 		fmt.Println(key, value)
 	}
-
 }
 
 func TestGRPC(t *testing.T) {
 	// address := "localhost:50051"
 	address := "192.168.2.80:50051"
 	jobID := "12306"
-	filePath := "/swc/code/video_analysis/dataset/4.mp4"
+	filePath := "/swc/code/video_analysis/dataset/1.mp4"
 	savaPath := "/swc/resource/"
 
 	// Set up a connection to the server.

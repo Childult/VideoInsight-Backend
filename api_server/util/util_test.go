@@ -7,6 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGetJobStatus(t *testing.T) {
+	var x int32 = 1
+	for x <= JobErrVideoAnalysisGRPCallJobIDNotMatch {
+		fmt.Printf("%d:%s\n", x, GetJobStatus(x))
+		x <<= 1
+	}
+}
+
 func TestDeleteKeywords(t *testing.T) {
 	// 测试函数 deleteKeywords
 	tests := []struct {

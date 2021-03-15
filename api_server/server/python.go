@@ -51,19 +51,19 @@ func (py *PyWorker) getCmd() (r string) {
 // Call 采用管道和`-c`参数, 可以实时输出
 func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 	cmd := exec.Command("python3", "-u", "-c", py.getCmd())
-	logger.Info.Println(cmd.Args)
+	logger.Info.Println("[python]", cmd.Args)
 
 	// 获取标准输出
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		logger.Error.Println(err)
+		logger.Error.Println("[python]", err)
 		return
 	}
 
 	// 获取标准错误输出
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		logger.Error.Println(err)
+		logger.Error.Println("[python]", err)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 	// 开始调用
 	err = cmd.Start()
 	if err != nil {
-		logger.Error.Println(err)
+		logger.Error.Println("[python]", err)
 		return
 	}
 	cmd.Wait()
@@ -97,8 +97,7 @@ func HandleOut(r io.Reader, job *job.Job, handles PythonHandlerFunc) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		s := scanner.Text()
-		// logger.Info.Println(s)
-		// fmt.Print(s)
+		logger.Info.Println("[python]", s)
 		index := strings.Index(s, Delimiter)
 		if index != -1 {
 			result = append(result, s[index+len:])
@@ -114,6 +113,6 @@ func HandleOut(r io.Reader, job *job.Job, handles PythonHandlerFunc) {
 func EasyOut(r io.Reader) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		logger.Info.Println(scanner.Text())
+		logger.Info.Println("[python]", scanner.Text())
 	}
 }

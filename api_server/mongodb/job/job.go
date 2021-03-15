@@ -67,7 +67,7 @@ func GetByKey(JobID string) (j Job, err error) {
 	filter := bson.M{key: value}
 	err = coll.FindOne(ctx, filter).Decode(&j)
 	if err != nil {
-		err = fmt.Errorf("Not Found <%s>", filter)
+		err = fmt.Errorf("未找到 <%s>", filter)
 	}
 	return
 }
