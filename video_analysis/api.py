@@ -1,5 +1,11 @@
+import logging
+
 import video_summary as vsumm
 import key_frame_extractor as keyframe_extractor
+
+
+logger = logging.getLogger('main.api')
+logger.setLevel(level=logging.INFO)
 
 
 def generate_abstract_from_video(file: str, save_dir: str) -> dict:
@@ -15,14 +21,20 @@ def generate_abstract_from_video(file: str, save_dir: str) -> dict:
     }
     try:
         # 对视频进行摘要，得到浓缩版视频
+        logger.info('Begin to do video summarize')
         compressed_video = video_summarize(file, save_dir)
+        logger.info('Done: video summarize')
     except Exception as e:
+        logger.error(e, exc_info=True)
         ret['Error'] = 'failed to summarize the video: ' + str(e)
     else:
         # 若无异常则进行下一步操作
         try:
+            logger.info('Begin to extract key frames')
             ret['VAbstract'] = extract_key_frame(compressed_video, save_dir)
+            logger.info('Done: extract key frames')
         except Exception as e:
+            logger.error(e, exc_info=True)
             ret['Error'] = 'failed to extract key frames: ' + str(e)
 
     return ret

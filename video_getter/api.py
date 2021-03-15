@@ -34,7 +34,7 @@ def download_video(url: str, path: str) -> str:
     fmt = formats[0]
     container = parsed_text['streams'][fmt]['container']
 
-    sys.argv = ['you-get', '-o', path, '-O', title, url, '--format=%s' % fmt]
+    sys.argv = ['you-get', '-o', path, '-O', title, url, '--format=%s' % fmt, '--debug']
     try:
         you_get.main()
     except Exception as e:
