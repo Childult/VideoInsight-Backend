@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  db:
+  swc-db:
     image: "mongo:4.4.4-bionic"
     restart: always
     ports:
@@ -29,7 +29,7 @@ services:
     ports:
       - "6666:8080"
     depends_on:
-      - db
+      - swc-db
       - video-analysis
     volumes:
       - /data/jhx/swc-backend/:/swc/code/
