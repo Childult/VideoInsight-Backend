@@ -50,7 +50,7 @@ const (
 
 // MessageJSON 用户利用 POST 提交的数据, 用于为任务创建唯一的 ID
 type MessageJSON struct {
-	DeviceID string   `json:"deviceid"`
+	DeviceID string   `json:"device_id"`
 	URL      string   `json:"url"`
 	KeyWords []string `json:"keywords,omitempty"`
 }

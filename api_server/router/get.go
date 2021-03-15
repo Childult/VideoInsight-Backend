@@ -19,7 +19,6 @@ import (
 func GetJob(c *gin.Context) {
 	// 获取数据
 	jobID := c.Param("job_id")
-	mongodb.SWCDB = "test"
 
 	// 查找数据
 	job, err := job.GetByKey(jobID)
