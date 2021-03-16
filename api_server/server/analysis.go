@@ -95,7 +95,7 @@ func textHandle(job *job.Job, result []string) {
 	if job.Status&util.JobVideoAbstractExtractionDone != 0 { // 视频分析已经完成
 		job.SetStatus(util.JobCompleted) // 任务结束
 	} else {
-		job.SetStatus(job.Status | util.JobTextAbstractExtractionDone) // 将文本分析完成的位置为1
+		job.SetStatus(util.JobTextAbstractExtractionDone) // 将文本分析完成的位置为1
 	}
 	go JobSchedule(job)
 }
@@ -181,7 +181,7 @@ func videoAnalysis(job *job.Job) {
 	if job.Status&util.JobTextAbstractExtractionDone != 0 { // 如果文本摘要已经完成
 		job.SetStatus(util.JobCompleted) // 该任务完成
 	} else {
-		job.SetStatus(job.Status | util.JobVideoAbstractExtractionDone) // 文本摘要未完成, 则只将视频摘要的位置置为1, 返回
+		job.SetStatus(util.JobVideoAbstractExtractionDone) // 文本摘要未完成, 则只将视频摘要的位置置为1, 返回
 	}
 	go JobSchedule(job)
 }

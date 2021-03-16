@@ -78,7 +78,7 @@ func PostJob(c *gin.Context) {
 	rt = ReturnType{
 		Status:  0,
 		Message: "任务创建成功",
-		Result:  gin.H{"job_id": oldJob.JobID}}
+		Result:  gin.H{"job_id": newJob.JobID}}
 
 	c.JSON(http.StatusOK, rt)
 }
