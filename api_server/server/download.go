@@ -32,7 +32,7 @@ func creatResource(job *job.Job) {
 	}
 
 	// 首次写入数据库
-	logger.Info.Printf("[创建资源] 资源创建成功:%+v.\n", resource)
+	logger.Debug.Printf("[创建资源] 资源创建成功:%+v.\n", resource)
 	mongodb.InsertOne(resource)
 	job.SetStatus(util.JobDownloadMedia)
 	go JobSchedule(job)
@@ -84,7 +84,7 @@ func downloadHandle(job *job.Job, result []string) {
 	}
 
 	// 下载成功, 更新状态
-	logger.Info.Printf("[下载视频回调] 视频下载成功: %+v.\n", result[0])
+	logger.Debug.Printf("[下载视频回调] 视频下载成功: %+v.\n", result[0])
 	r.VideoPath = result[0]
 	r.SetStatus(util.ResourceExtracting)
 	job.SetStatus(util.JobExtractAudio)
@@ -137,7 +137,7 @@ func extractHandle(job *job.Job, result []string) {
 	}
 
 	// 音频提取成功, 更新状态
-	logger.Info.Printf("[提取音频回调] 音频提取成功: %+v.\n", result[0])
+	logger.Debug.Printf("[提取音频回调] 音频提取成功: %+v.\n", result[0])
 	r.AudioPath = result[0]
 	r.SetStatus(util.ResourceCompleted)
 	job.SetStatus(util.JobExtractAudioDone)
@@ -156,9 +156,9 @@ func waitDownload(job *job.Job) {
 	}
 
 	for {
-		logger.Info.Printf("[候车间] 检查资源状态: %+v.\n", r)
+		logger.Debug.Printf("[候车间] 检查资源状态: %+v.\n", r)
 		if r.Status == util.ResourceCompleted {
-			logger.Info.Println("[候车间] 资源下载完成")
+			logger.Debug.Println("[候车间] 资源下载完成")
 			job.SetStatus(util.JobExtractAudioDone)
 			go JobSchedule(job)
 			return

@@ -136,6 +136,7 @@ type videoTest struct {
 // videoHandle 视频分析的回调
 func videoTestHandle(job *job.Job, result []string) {
 	job.Status = 1
+	fmt.Println("回调:", result)
 }
 
 func Test(t *testing.T) {
@@ -164,6 +165,40 @@ func Test(t *testing.T) {
 		}
 	}
 	fmt.Printf("%+v, %+v\n", python, jobs)
+}
+
+func TestMediaDownload(t *testing.T) {
+	mongodb.SWCDB = "test"
+	logger.InitLog()
+	// python 下载
+	python := server.PyWorker{
+		PackagePath: "/swc/code/video_getter/",
+		FileName:    "api",
+		MethodName:  "download_video",
+		Args: []string{
+			server.SetArg("https://www.bilibili.com/video/BV1st411g7a1"),
+			server.SetArg("/swc/resource/test/"),
+		},
+	}
+	jobs := job.Job{
+		DeviceID: "json.DeviceID",
+		URL:      "json.URL",
+		KeyWords: []string{},
+		JobID:    "json.GetID()",
+		Status:   0,
+	}
+	go python.Call(&jobs, videoTestHandle)
+	for {
+		if jobs.Status != 1 {
+			time.Sleep(time.Second * 10)
+			fmt.Println("hello")
+		} else {
+			break
+		}
+	}
+	fmt.Printf("%+v, %+v\n", python, jobs)
+	time.Sleep(time.Second * 10)
+
 }
 
 func TestVideoAbstract(t *testing.T) {
