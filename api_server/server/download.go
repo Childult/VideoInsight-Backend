@@ -188,7 +188,7 @@ func extractTextAbstract(job *job.Job) {
 			job.SetStatus(util.JobCompleted) // 任务完成
 			go JobSchedule(job)
 		} else {
-			job.SetStatus(job.Status | util.JobTextAbstractExtractionDone)
+			job.SetStatus(util.JobTextAbstractExtractionDone)
 			go JobSchedule(job)
 		}
 	} else {
@@ -205,7 +205,7 @@ func extractVideoAbstract(job *job.Job) {
 			job.SetStatus(util.JobCompleted) // 任务完成
 			go JobSchedule(job)
 		} else {
-			job.SetStatus(job.Status | util.JobVideoAbstractExtractionDone)
+			job.SetStatus(util.JobVideoAbstractExtractionDone)
 			go JobSchedule(job)
 		}
 	} else {

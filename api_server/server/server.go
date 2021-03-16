@@ -34,11 +34,11 @@ func JobSchedule(job *job.Job) {
 		go extractTextAbstract(job)  // 音频提取成功, 提取文本摘要
 		go extractVideoAbstract(job) // 音频提取成功, 提取视频摘要
 
-	} else if status&util.JobVideoAbstractExtractionDone != 0 {
-		go extractTextAbstract(job) // 视频摘要完成, 但文本摘要未完成
-
 	} else if status&util.JobTextAbstractExtractionDone != 0 {
 		go extractVideoAbstract(job) // 文本摘要完成, 但视频摘要未完成
+
+	} else if status&util.JobVideoAbstractExtractionDone != 0 {
+		go extractTextAbstract(job) // 视频摘要完成, 但文本摘要未完成
 
 	}
 }
