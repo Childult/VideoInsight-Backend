@@ -70,18 +70,15 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 
 	// 错误直接输出
 	wg.Add(1)
-	fmt.Println("[EasyOut] +1")
 	go EasyOut(&wg, stderr)
 
 	// 标准输出进行处理
 	if handles == nil {
 		wg.Add(1)
-		fmt.Println("[HandleOut] +1")
 		go HandleOut(&wg, stdout, job, nil)
 	} else {
 		for _, handle := range handles {
 			wg.Add(1)
-			fmt.Println("[HandleOut] +1")
 			go HandleOut(&wg, stdout, job, handle)
 		}
 	}
@@ -93,15 +90,16 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 		return
 	}
 	wg.Wait()
-	fmt.Println("Python结束")
-	return
+	logger.Debug.Println("[python] 结束", cmd.Args)
 }
 
 // HandleOut 处理标准输出
 func HandleOut(wg *sync.WaitGroup, r io.Reader, job *job.Job, handles PythonHandlerFunc) {
-	var result []string
+	logger.Debug.Println("[HandleOut] 开始.")
 	Delimiter := "GoTOPythonDelimiter "
 	len := len(Delimiter)
+	isFinded := false
+	var result []string
 
 	var sb strings.Builder
 	buf := make([]byte, 256)
@@ -111,9 +109,9 @@ func HandleOut(wg *sync.WaitGroup, r io.Reader, job *job.Job, handles PythonHand
 		n, err := r.Read(buf)
 		if err != nil {
 			if err != io.EOF {
-				logger.Debug.Println("[python] HandleOut 读取缓冲区异常, err:", err)
+				logger.Debug.Println("[HandleOut] 读取缓冲区异常, err:", err)
 			} else {
-				logger.Debug.Println("[python] HandleOut 读取缓冲区结束.")
+				logger.Debug.Println("[HandleOut] 读取缓冲区结束.")
 			}
 			break
 		}
@@ -121,19 +119,26 @@ func HandleOut(wg *sync.WaitGroup, r io.Reader, job *job.Job, handles PythonHand
 
 		s := sb.String()
 		logger.Debug.Println("[python]", s)
-		index := strings.Index(s, Delimiter)
-		if index != -1 {
-			result = append(result, s[index+len:])
+		if isFinded {
+			result = append(result, s)
+		} else {
+			index := strings.Index(s, Delimiter)
+			if index != -1 {
+				result = append(result, s[index+len:])
+				isFinded = true
+			}
 		}
 	}
 	if handles != nil {
 		go handles(job, result)
 	}
 	wg.Done()
+	logger.Debug.Println("[HandleOut] 结束.")
 }
 
 // EasyOut 简单输出
 func EasyOut(wg *sync.WaitGroup, r io.Reader) {
+	logger.Debug.Println("[EasyOut] 开始.")
 	var sb strings.Builder
 	buf := make([]byte, 256)
 
@@ -142,9 +147,9 @@ func EasyOut(wg *sync.WaitGroup, r io.Reader) {
 		n, err := r.Read(buf)
 		if err != nil {
 			if err != io.EOF {
-				logger.Debug.Println("[python] EasyOut 读取缓冲区异常, err:", err)
+				logger.Debug.Println("[EasyOut] 读取缓冲区异常, err:", err)
 			} else {
-				logger.Debug.Println("[python] EasyOut 读取缓冲区结束.")
+				logger.Debug.Println("[EasyOut] 读取缓冲区结束.")
 			}
 			break
 		}
@@ -154,4 +159,5 @@ func EasyOut(wg *sync.WaitGroup, r io.Reader) {
 		logger.Debug.Println("[python]", s)
 	}
 	wg.Done()
+	logger.Debug.Println("[EasyOut] 结束.")
 }

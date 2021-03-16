@@ -136,7 +136,7 @@ type videoTest struct {
 // videoHandle 视频分析的回调
 func videoTestHandle(job *job.Job, result []string) {
 	job.Status = 1
-	fmt.Println("回调:", result)
+	fmt.Println("回调:", strings.Join(result, ""))
 }
 
 func Test(t *testing.T) {
@@ -176,7 +176,8 @@ func TestMediaDownload(t *testing.T) {
 		FileName:    "api",
 		MethodName:  "download_video",
 		Args: []string{
-			server.SetArg("https://www.bilibili.com/video/BV1st411g7a1"),
+			// server.SetArg("https://www.bilibili.com/video/BV1st411g7a1"),
+			server.SetArg("https://www.bilibili.com/video/BV11y4y177hR"), // 短视频
 			server.SetArg("/swc/resource/test/"),
 		},
 	}
@@ -197,8 +198,6 @@ func TestMediaDownload(t *testing.T) {
 		}
 	}
 	fmt.Printf("%+v, %+v\n", python, jobs)
-	time.Sleep(time.Second * 10)
-
 }
 
 func TestVideoAbstract(t *testing.T) {
@@ -211,8 +210,9 @@ func TestVideoAbstract(t *testing.T) {
 		MethodName:  "generate_abstract_from_video",
 		Args: []string{
 			// server.SetArg("/swc/code/api_server/test/test_media.mp4"),
-			server.SetArg("/swc/resource/test/media/3.mp4"),
-			server.SetArg("/swc/resource/test/go/"),
+			// server.SetArg("/swc/resource/test/MTYxNTkwNTU1OS4zNzMyNTM4aHR0cHM6Ly93d3cuYmlsaWJpbGkuY29tL3ZpZGVvL0JWMXN0NDExZzdhMQ==.mp4"),
+			server.SetArg("/swc/resource/test/MTYxNTkzODYzMy40ODY0NjA3aHR0cHM6Ly93d3cuYmlsaWJpbGkuY29tL3ZpZGVvL0JWMTF5NHkxNzdoUg==.mp4"), // 短视频
+			server.SetArg("/swc/resource/test/"),
 		},
 	}
 	jobs := job.Job{
@@ -222,10 +222,11 @@ func TestVideoAbstract(t *testing.T) {
 		JobID:    "json.GetID()",
 		Status:   0,
 	}
-	python.Call(&jobs, videoTestHandle)
+	go python.Call(&jobs, videoTestHandle)
 	for {
 		if jobs.Status != 1 {
-			time.Sleep(time.Second * 100)
+			time.Sleep(time.Second * 10)
+			fmt.Println("hello")
 		} else {
 			break
 		}
