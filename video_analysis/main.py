@@ -27,6 +27,10 @@ for level in levels.keys():
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
 
 class VideoService(VideoAnalysisServicer):
     async def GetStaticVideoAbstract(self, request: VideoInfo, context: grpc.aio.ServicerContext) -> Result:
