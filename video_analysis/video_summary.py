@@ -59,35 +59,34 @@ if args.use_cpu:
 
 
 def main(video_path=''):
-    print("==========\nArgs:{}\n==========".format(args))
+    logger.info("==========\nArgs:{}\n==========".format(args))
 
     if use_gpu:
-        print("Currently using GPU {}".format(args.gpu))
+        logger.info("Currently using GPU {}".format(args.gpu))
         cudnn.benchmark = True
         torch.cuda.manual_seed_all(args.seed)
     else:
-        print("Currently using CPU")
+        logger.info("Currently using CPU")
 
-    print("Initialize dataset {}".format(args.dataset))
+    logger.info("Initialize dataset {}".format(args.dataset))
     dataset = h5py.File(args.dataset, 'r')
     test_keys = []
 
     for key in dataset.keys():
         test_keys.append(key)
 
-    print("Load model")
+    logger.info("Load model")
     model = DSN(in_dim=args.input_dim, hid_dim=args.hidden_dim, num_layers=args.num_layers, cell=args.rnn_cell)
-    print("Model size: {:.5f}M".format(sum(p.numel() for p in model.parameters()) / 1000000.0))
+    logger.info("Model size: {:.5f}M".format(sum(p.numel() for p in model.parameters()) / 1000000.0))
 
     if args.model:
-        print("Loading checkpoint from '{}'".format(args.model))
+        logger.info("Loading checkpoint from '{}'".format(args.model))
         checkpoint = torch.load(args.model, map_location=device)
         model.load_state_dict(checkpoint)
 
     if use_gpu:
         model = nn.DataParallel(model).cuda()
     evaluate(model, dataset, test_keys)
-    logger.info('Begin to do video summary')
     if video_path != '':
         video2summary(os.path.join(args.save_dir, 'result.h5'), video_path, args.save_dir)
     else:
@@ -134,7 +133,7 @@ def evaluate(model, dataset, test_keys):
 
 
 def frm2video(video_dir, summary, vid_writer):
-    print('[INFO] Video Summary')
+    logger.info('[INFO] Video Summary')
     video_capture = cv2.VideoCapture(video_dir)
     count = 0
     for idx, val in tqdm(enumerate(summary)):
@@ -144,7 +143,7 @@ def frm2video(video_dir, summary, vid_writer):
             vid_writer.write(frm)
         else:
             count += 1
-    print('[OUTPUT] total {} frame, ignore {} frame'.format(len(summary) - count, count))
+    logger.info('[OUTPUT] total {} frame, ignore {} frame'.format(len(summary) - count, count))
 
 
 def video2summary(h5_dir, video_dir, output_dir):
@@ -178,11 +177,11 @@ def video_summarize_api(video_path, save_dir='/swc/resource/compressed/'):
     args.dataset = os.path.join(save_dir, video_name + '.h5')
     args.save_name = os.path.join(save_dir, video_name + '-compressed.mp4')
     args.save_dir = save_dir
-    logger.info('Begin to generate dataset')
+    logger.info('Begin to generate dataset: %s', video_path)
     gen = Generate_Dataset(video_path, args.dataset)
     gen.generate_dataset()
     gen.h5_file.close()
-    logger.info('Done: generate dataset')
+    logger.info('Done: generate dataset: %s', video_path)
     main(video_path)
     return args.save_name
 

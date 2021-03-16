@@ -22,6 +22,7 @@ services:
     ports:
       - "50051:50051"
     volumes:
+      - /data/jhx/swc-log/:/swc/log/
       - /data/jhx/swc-backend/video_analysis/:/swc/code/video_analysis/
       - /data/jhx/swc-resource/:/swc/resource/
 

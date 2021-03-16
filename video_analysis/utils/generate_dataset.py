@@ -7,6 +7,7 @@
     4. User Summary ( for evaluation )
 
 """
+import logging
 import os
 
 from networkss.CNN import ResNet
@@ -17,9 +18,9 @@ import math
 import cv2
 import numpy as np
 import h5py
-import torch
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logger = logging.getLogger('main.dataset')
+logger.setLevel(level=logging.INFO)
 
 
 class Generate_Dataset:
@@ -91,9 +92,8 @@ class Generate_Dataset:
 
             video_capture = cv2.VideoCapture(video_path)
             fps = video_capture.get(cv2.CAP_PROP_FPS)
-            print(fps)
             n_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-            print(n_frames)
+            logger.info('Video: %s, fps: %d, frames: %d', video_filename, fps, n_frames)
 
             picks = []
             video_feat = None
