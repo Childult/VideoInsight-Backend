@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	// Info 常规
+	// Info 调试
 	Info *log.Logger
 	// Warning 警告
 	Warning *log.Logger
-	// Debug 调试
+	// Debug 常规
 	Debug *log.Logger
 	// Error 错误
 	Error *log.Logger
@@ -38,8 +38,8 @@ func InitLog() {
 		log.Fatalln("Open LogFile Error：", err)
 	}
 
-	Info = log.New(io.MultiWriter(os.Stderr, infoFile), "Info:", log.Ldate|log.Ltime|log.Lshortfile)
-	Warning = log.New(io.MultiWriter(os.Stderr, warningFile), "Warning:", log.Ldate|log.Ltime|log.Lshortfile)
-	Debug = log.New(io.MultiWriter(os.Stderr, debugFile), "Debug:", log.Ldate|log.Ltime|log.Lshortfile)
-	Error = log.New(io.MultiWriter(os.Stderr, errFile), "Error:", log.Ldate|log.Ltime|log.Lshortfile)
+	Info = log.New(io.MultiWriter(os.Stderr, infoFile, debugFile), "Debug:", log.Ldate|log.Ltime|log.Lshortfile)
+	Warning = log.New(io.MultiWriter(os.Stderr, warningFile, debugFile), "Warning:", log.Ldate|log.Ltime|log.Lshortfile)
+	Debug = log.New(io.MultiWriter(debugFile), "Info:", log.Ldate|log.Ltime|log.Lshortfile)
+	Error = log.New(io.MultiWriter(os.Stderr, errFile, debugFile), "Error:", log.Ldate|log.Ltime|log.Lshortfile)
 }

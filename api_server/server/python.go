@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os/exec"
@@ -10,6 +9,7 @@ import (
 	"swc/logger"
 	"swc/mongodb/job"
 	"swc/util"
+	"sync"
 )
 
 // PyWorker 用于调用 python
@@ -51,7 +51,8 @@ func (py *PyWorker) getCmd() (r string) {
 // Call 采用管道和`-c`参数, 可以实时输出
 func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 	cmd := exec.Command("python3", "-u", "-c", py.getCmd())
-	logger.Info.Println("[python]", cmd.Args)
+	logger.Debug.Println("[python]", cmd.Args)
+	wg := sync.WaitGroup{}
 
 	// 获取标准输出
 	stdout, err := cmd.StdoutPipe()
@@ -68,14 +69,20 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 	}
 
 	// 错误直接输出
-	go EasyOut(stderr)
+	wg.Add(1)
+	fmt.Println("[EasyOut] +1")
+	go EasyOut(&wg, stderr)
 
 	// 标准输出进行处理
 	if handles == nil {
-		go HandleOut(stdout, job, nil)
+		wg.Add(1)
+		fmt.Println("[HandleOut] +1")
+		go HandleOut(&wg, stdout, job, nil)
 	} else {
 		for _, handle := range handles {
-			go HandleOut(stdout, job, handle)
+			wg.Add(1)
+			fmt.Println("[HandleOut] +1")
+			go HandleOut(&wg, stdout, job, handle)
 		}
 	}
 
@@ -85,19 +92,35 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 		logger.Error.Println("[python]", err)
 		return
 	}
-	cmd.Wait()
+	wg.Wait()
+	fmt.Println("Python结束")
 	return
 }
 
 // HandleOut 处理标准输出
-func HandleOut(r io.Reader, job *job.Job, handles PythonHandlerFunc) {
+func HandleOut(wg *sync.WaitGroup, r io.Reader, job *job.Job, handles PythonHandlerFunc) {
 	var result []string
 	Delimiter := "GoTOPythonDelimiter "
 	len := len(Delimiter)
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		s := scanner.Text()
-		logger.Info.Println("[python]", s)
+
+	var sb strings.Builder
+	buf := make([]byte, 256)
+
+	for {
+		sb.Reset()
+		n, err := r.Read(buf)
+		if err != nil {
+			if err != io.EOF {
+				logger.Debug.Println("[python] HandleOut 读取缓冲区异常, err:", err)
+			} else {
+				logger.Debug.Println("[python] HandleOut 读取缓冲区结束.")
+			}
+			break
+		}
+		sb.Write(buf[:n])
+
+		s := sb.String()
+		logger.Debug.Println("[python]", s)
 		index := strings.Index(s, Delimiter)
 		if index != -1 {
 			result = append(result, s[index+len:])
@@ -105,14 +128,30 @@ func HandleOut(r io.Reader, job *job.Job, handles PythonHandlerFunc) {
 	}
 	if handles != nil {
 		go handles(job, result)
-		return
 	}
+	wg.Done()
 }
 
 // EasyOut 简单输出
-func EasyOut(r io.Reader) {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		logger.Info.Println("[python]", scanner.Text())
+func EasyOut(wg *sync.WaitGroup, r io.Reader) {
+	var sb strings.Builder
+	buf := make([]byte, 256)
+
+	for {
+		sb.Reset()
+		n, err := r.Read(buf)
+		if err != nil {
+			if err != io.EOF {
+				logger.Debug.Println("[python] EasyOut 读取缓冲区异常, err:", err)
+			} else {
+				logger.Debug.Println("[python] EasyOut 读取缓冲区结束.")
+			}
+			break
+		}
+		sb.Write(buf[:n])
+
+		s := sb.String()
+		logger.Debug.Println("[python]", s)
 	}
+	wg.Done()
 }

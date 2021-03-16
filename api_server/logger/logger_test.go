@@ -7,9 +7,9 @@ import (
 func TestLogger(t *testing.T) {
 	InitLog()
 
-	Info.Println("hello")
-	Warning.Println("hello")
 	Debug.Println("hello")
+	Warning.Println("hello")
+	Info.Println("hello")
 	Error.Println("hello")
 
 	// 颜色输出, 测试时好像失效, 在main里运行是有的. 目前确定是vscode OUTPUT窗口的问题, 将命令复制到终端运行时结果正常

@@ -124,10 +124,10 @@ func videoAnalysis(job *job.Job) {
 	jobID := job.JobID                                  // 任务id
 	videoFile := filepath.Join(r.Location, r.VideoPath) // 视频文件路径
 	savaPath := r.Location                              // 结果存储路径
-	logger.Info.Printf("[视频分析] gRPC 参数: address:%+v, jobID:%+v, videoFile:%+v, savaPath:%+v.\n", address, jobID, videoFile, savaPath)
+	logger.Debug.Printf("[视频分析] gRPC 参数: address:%+v, jobID:%+v, videoFile:%+v, savaPath:%+v.\n", address, jobID, videoFile, savaPath)
 
 	// 连接 gRPC 服务器
-	logger.Info.Println("[视频分析] 连接 gRPC 服务器.")
+	logger.Debug.Println("[视频分析] 连接 gRPC 服务器.")
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		logger.Error.Printf("[视频分析] gRPC 服务器连接失败: %+v.\n", err)
@@ -140,7 +140,7 @@ func videoAnalysis(job *job.Job) {
 	rpc := pb.NewVideoAnalysisClient(conn) // gRPC 调用的句柄
 
 	// 开始调用服务
-	logger.Info.Println("[视频分析] 开始调用 gRPC 服务.")
+	logger.Debug.Println("[视频分析] 开始调用 gRPC 服务.")
 	rpcResult, err := rpc.GetStaticVideoAbstract(context.TODO(), &pb.VideoInfo{JobId: jobID, File: videoFile, SaveDir: savaPath})
 	if err != nil {
 		logger.Error.Printf("[视频分析] gRPC 调用失败: %+v.\n", err)
@@ -148,7 +148,7 @@ func videoAnalysis(job *job.Job) {
 		go JobSchedule(job)
 		return
 	}
-	logger.Info.Printf("[视频分析] gRPC 结果: %+v.\n", rpcResult)
+	logger.Debug.Printf("[视频分析] gRPC 结果: %+v.\n", rpcResult)
 
 	// 结果校验
 	jobid := rpcResult.GetJobID()
@@ -169,7 +169,7 @@ func videoAnalysis(job *job.Job) {
 		go JobSchedule(job)
 		return
 	}
-	logger.Info.Printf("[视频分析] 视频分析结果: %+v.\n", videoPath)
+	logger.Debug.Printf("[视频分析] 视频分析结果: %+v.\n", videoPath)
 
 	// 初始化需要存储的数据
 	absvideo := absvideo.AbsVideo{

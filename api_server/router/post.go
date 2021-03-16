@@ -33,7 +33,7 @@ func PostJob(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, rt)
 		return
 	}
-	logger.Info.Printf("[POST] 收到: %+v.\n", json)
+	logger.Debug.Printf("[POST] 收到: %+v.\n", json)
 
 	// 构建任务
 	newJob := job.Job{
