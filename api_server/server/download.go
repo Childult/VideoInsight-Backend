@@ -3,6 +3,7 @@ package server
 import (
 	"path/filepath"
 	"strconv"
+	"strings"
 	"swc/logger"
 	"swc/mongodb"
 	"swc/mongodb/abstext"
@@ -75,16 +76,17 @@ func downloadHandle(job *job.Job, result []string) {
 	}
 
 	// 是否下载成功
-	if len(result) != 1 {
+	if len(result) == 0 {
 		logger.Error.Println("[下载视频回调] 下载失败.")
 		r.SetStatus(util.ResourceErrDownloadFailed)
 		job.SetStatus(util.JobErrDownloadFailed)
 		go JobSchedule(job)
 		return
 	}
+	pythonReturn := strings.Join(result, "")
 
 	// 下载成功, 更新状态
-	logger.Debug.Printf("[下载视频回调] 视频下载成功: %+v.\n", result[0])
+	logger.Debug.Printf("[下载视频回调] 视频下载成功: %+v.\n", pythonReturn)
 	r.VideoPath = result[0]
 	r.SetStatus(util.ResourceExtracting)
 	job.SetStatus(util.JobExtractAudio)
@@ -128,16 +130,17 @@ func extractHandle(job *job.Job, result []string) {
 	}
 
 	// 是否成功提取音频
-	if len(result) != 1 {
+	if len(result) == 1 {
 		logger.Error.Println("[提取音频回调] 提取失败.")
 		r.SetStatus(util.ResourceErrExtractFailed)
 		job.SetStatus(util.JobErrExtractFailed)
 		go JobSchedule(job)
 		return
 	}
+	pythonReturn := strings.Join(result, "")
 
 	// 音频提取成功, 更新状态
-	logger.Debug.Printf("[提取音频回调] 音频提取成功: %+v.\n", result[0])
+	logger.Debug.Printf("[提取音频回调] 音频提取成功: %+v.\n", pythonReturn)
 	r.AudioPath = result[0]
 	r.SetStatus(util.ResourceCompleted)
 	job.SetStatus(util.JobExtractAudioDone)

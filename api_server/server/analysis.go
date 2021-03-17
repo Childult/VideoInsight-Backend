@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"path/filepath"
+	"strings"
 	"swc/logger"
 	"swc/mongodb"
 	"swc/mongodb/abstext"
@@ -62,16 +63,17 @@ func textHandle(job *job.Job, result []string) {
 		return
 	}
 
-	if len(result) != 1 { // 未找到结果
+	if len(result) == 0 { // 未找到结果
 		logger.Error.Println("[文本分析回调] 文本分析失败.")
 		job.SetStatus(util.JobErrTextAnalysisFailed)
 		go JobSchedule(job)
 		return
 	}
+	pythonReturn := strings.Join(result, "")
 
 	// 找到结果, 从返回结果中提取数据
 	var text textAbstract
-	err = json.Unmarshal([]byte(result[0]), &text)
+	err = json.Unmarshal([]byte(pythonReturn), &text)
 	if err != nil {
 		logger.Error.Printf("[文本分析回调] 从文本分析结果中获取JSON失败: %+v.\n", err)
 		job.SetStatus(util.JobErrTextAnalysisReadJSONFailed)
