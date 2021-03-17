@@ -127,44 +127,10 @@ func TestGRPC(t *testing.T) {
 	log.Println("Get: ", r.GetJobID(), r.GetPicName(), r.GetError())
 }
 
-// videoTest 用于存储视频摘要的结果
-type videoTest struct {
-	VAbstract []string `json:"VAbstract"`
-	Error     string   `json:"Error"`
-}
-
 // videoHandle 视频分析的回调
 func videoTestHandle(job *job.Job, result []string) {
 	job.Status = 1
 	fmt.Println("回调:", strings.Join(result, ""))
-}
-
-func Test(t *testing.T) {
-	mongodb.SWCDB = "test"
-	logger.InitLog()
-	// python 测试
-	python := server.PyWorker{
-		PackagePath: "/swc/resource/test",
-		FileName:    "a",
-		MethodName:  "x",
-		Args:        []string{},
-	}
-	jobs := job.Job{
-		DeviceID: "json.DeviceID",
-		URL:      "json.URL",
-		KeyWords: []string{},
-		JobID:    "json.GetID()",
-		Status:   0,
-	}
-	python.Call(&jobs, videoTestHandle)
-	for {
-		if jobs.Status != 1 {
-			time.Sleep(time.Second * 10)
-		} else {
-			break
-		}
-	}
-	fmt.Printf("%+v, %+v\n", python, jobs)
 }
 
 func TestMediaDownload(t *testing.T) {
@@ -209,7 +175,6 @@ func TestVideoAbstract(t *testing.T) {
 		FileName:    "api",
 		MethodName:  "generate_abstract_from_video",
 		Args: []string{
-			// server.SetArg("/swc/code/api_server/test/test_media.mp4"),
 			// server.SetArg("/swc/resource/test/MTYxNTkwNTU1OS4zNzMyNTM4aHR0cHM6Ly93d3cuYmlsaWJpbGkuY29tL3ZpZGVvL0JWMXN0NDExZzdhMQ==.mp4"),
 			server.SetArg("/swc/resource/test/MTYxNTkzODYzMy40ODY0NjA3aHR0cHM6Ly93d3cuYmlsaWJpbGkuY29tL3ZpZGVvL0JWMTF5NHkxNzdoUg==.mp4"), // 短视频
 			server.SetArg("/swc/resource/test/"),
