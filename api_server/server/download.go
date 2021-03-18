@@ -87,11 +87,7 @@ func downloadHandle(job *job.Job, result []string) {
 
 	// 下载成功, 更新状态
 	logger.Debug.Printf("[下载视频回调] 视频下载成功: %+v.\n", pythonReturn)
-<<<<<<< HEAD
 	r.VideoPath = pythonReturn
-=======
-	r.VideoPath = result[0]
->>>>>>> master
 	r.SetStatus(util.ResourceExtracting)
 	job.SetStatus(util.JobExtractAudio)
 	go JobSchedule(job)
@@ -134,11 +130,7 @@ func extractHandle(job *job.Job, result []string) {
 	}
 
 	// 是否成功提取音频
-<<<<<<< HEAD
 	if len(result) == 0 {
-=======
-	if len(result) == 1 {
->>>>>>> master
 		logger.Error.Println("[提取音频回调] 提取失败.")
 		r.SetStatus(util.ResourceErrExtractFailed)
 		job.SetStatus(util.JobErrExtractFailed)
@@ -149,11 +141,7 @@ func extractHandle(job *job.Job, result []string) {
 
 	// 音频提取成功, 更新状态
 	logger.Debug.Printf("[提取音频回调] 音频提取成功: %+v.\n", pythonReturn)
-<<<<<<< HEAD
 	r.AudioPath = pythonReturn
-=======
-	r.AudioPath = result[0]
->>>>>>> master
 	r.SetStatus(util.ResourceCompleted)
 	job.SetStatus(util.JobExtractAudioDone)
 	go JobSchedule(job)
