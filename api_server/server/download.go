@@ -191,8 +191,7 @@ func extractTextAbstract(job *job.Job) {
 			job.SetStatus(util.JobCompleted) // 任务完成
 			go JobSchedule(job)
 		} else {
-			job.SetStatus(util.JobTextAbstractExtractionDone)
-			go JobSchedule(job)
+			job.SetStatus(job.Status | util.JobTextAbstractExtractionDone)
 		}
 	} else {
 		// 不存在就进行文本分析, 否则忽略
@@ -208,8 +207,7 @@ func extractVideoAbstract(job *job.Job) {
 			job.SetStatus(util.JobCompleted) // 任务完成
 			go JobSchedule(job)
 		} else {
-			job.SetStatus(util.JobVideoAbstractExtractionDone)
-			go JobSchedule(job)
+			job.SetStatus(job.Status | util.JobVideoAbstractExtractionDone)
 		}
 	} else {
 		// 不存在就进行视频分析, 否则忽略
