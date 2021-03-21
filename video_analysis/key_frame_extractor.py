@@ -52,7 +52,7 @@ def rel_change(a, b):
     return x
 
 
-def extract_keyframes(video_path: str, save_dir: str, num: int) -> [str]:
+def extract_keyframes(video_path: str, save_dir: str, num=5) -> [str]:
     # Setting fixed threshold criteria
     USE_THRESH = False
     # fixed threshold value
