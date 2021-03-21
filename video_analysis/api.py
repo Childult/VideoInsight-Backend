@@ -62,14 +62,15 @@ def get_video_duration(file: str) -> int:
     return round(frame_counter / fps / 60)
 
 
-def extract_key_frame(file: str, save_dir: str) -> [str]:
+def extract_key_frame(file: str, save_dir: str, num: int) -> [str]:
     """
     提取视频中的关键帧
     :param file: 视频所在路径
     :param save_dir: 关键帧图片保存目录
+    :param num: 关键帧数量
     :return: 关键帧图片名称列表（不包含目录名），如 ['keyframe_1.jpg', 'keyframe_2.jpg']
     """
-    return keyframe_extractor.extract_keyframes(file, save_dir)
+    return keyframe_extractor.extract_keyframes(file, save_dir, num)
 
 
 def video_summarize(file: str, save_dir: str) -> str:
