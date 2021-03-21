@@ -52,7 +52,7 @@ def rel_change(a, b):
     return x
 
 
-def extract_keyframes(video_path: str, save_dir: str) -> [str]:
+def extract_keyframes(video_path: str, save_dir: str, num=5) -> [str]:
     # Setting fixed threshold criteria
     USE_THRESH = False
     # fixed threshold value
@@ -109,6 +109,22 @@ def extract_keyframes(video_path: str, save_dir: str) -> [str]:
         for i in frame_indexes:
             keyframe_id_set.add(frames[i - 1].id)
 
+        # 本来上面就选出了关键帧，但是我们只要num个，这个num可能比较小，那么就要均匀取样，也可能num比较大，那就还要补充
+
+        # 如果num比较小，均匀取样
+        if len(keyframe_id_set) >= num:
+            keyframe_id_set = sorted(list(keyframe_id_set))
+            keyframe_id_set = [keyframe_id_set[int(idx)] for idx in np.linspace(0, len(keyframe_id_set)-1, num)]
+            keyframe_id_set = set(keyframe_id_set)
+        # 如果num比较大，再用另一种方法补充
+        else:
+            frames.sort(key=operator.attrgetter("diff"), reverse=True)
+            for keyframe in frames[:num]:
+                if len(keyframe_id_set) == num:
+                    break
+                else:
+                    keyframe_id_set.add(keyframe.id)
+
         # 存帧间差分强度图，我们不需要就注释了
         # plt.figure(figsize=(40, 20))
         # plt.locator_params(numticks=100)
@@ -137,4 +153,4 @@ def extract_keyframes(video_path: str, save_dir: str) -> [str]:
 
 
 if __name__ == '__main__':
-    print(extract_keyframes('/swc/code/video_analysis/dataset/1.mp4', '/swc/code/video_analysis/output/'))
+    print(extract_keyframes('/swc/code/video_analysis/dataset/1.mp4', '/swc/code/video_analysis/output/', 5))
