@@ -9,6 +9,7 @@
 """
 import logging
 import os
+from copy import deepcopy
 
 from networkss.CNN import ResNet
 
@@ -51,7 +52,7 @@ class Generate_Dataset:
         frame = cv2.resize(frame, (224, 224))
         res_pool5 = self.resnet(frame)
         frame_feat = res_pool5.cpu().data.numpy().flatten()
-
+        # print(frame_feat.shape, frame_feat.dtype)
         return frame_feat
 
     def _get_change_points(self, video_feat, n_frame, fps):
@@ -96,29 +97,27 @@ class Generate_Dataset:
             logger.info('Video: %s, fps: %d, frames: %d', video_filename, fps, n_frames)
 
             picks = []
-            video_feat = None
-            video_feat_for_train = None
+            video_feat = []
+            video_feat_for_train = []
+
+            # 视频特征采样率，数值越大，采样越多，处理时间越长
+            sampling_rate = 6
+            prev = None
             for frame_idx in tqdm(range(n_frames - 1)):
-                success, frame = video_capture.read()
-                if success:
-                    frame_feat = self._extract_feature(frame)
-                    # print(frame_idx,'/',n_frames - 1)
-                    if frame_idx % 15 == 0:
+                if frame_idx % (fps // sampling_rate + 2) == 0:
+                    success, frame = video_capture.read()
+                    if success:
+                        frame_feat = self._extract_feature(frame)
+                        prev = frame_feat
+
                         picks.append(frame_idx)
+                        video_feat_for_train.append(frame_feat)
 
-                        if video_feat_for_train is None:
-                            video_feat_for_train = frame_feat
-                        else:
-                            video_feat_for_train = np.vstack((video_feat_for_train, frame_feat))
-
-                    if video_feat is None:
-                        video_feat = frame_feat
-                    else:
-                        video_feat = np.vstack((video_feat, frame_feat))
-                else:
-                    break
+                video_feat.append(prev)
 
             video_capture.release()
+            video_feat_for_train = np.vstack(video_feat_for_train)
+            video_feat = np.vstack(video_feat)
             change_points, n_frame_per_seg = self._get_change_points(video_feat, n_frames, fps)
             self.h5_file['video_{}'.format(video_idx + 1)]['features'] = list(video_feat_for_train)
             self.h5_file['video_{}'.format(video_idx + 1)]['picks'] = np.array(list(picks))

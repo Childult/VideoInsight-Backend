@@ -17,8 +17,8 @@ services:
     restart: always
     runtime: nvidia
     environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - TZ=Asia/Shanghai
+      NVIDIA_VISIBLE_DEVICES: all
+      TZ: Asia/Shanghai
     ports:
       - "50051:50051"
     volumes:
