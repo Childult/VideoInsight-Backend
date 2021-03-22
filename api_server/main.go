@@ -25,7 +25,7 @@ func GinRouter() (r *gin.Engine) {
 
 func main() {
 	// 初始化日志
-	logger.InitLog()
+	logger.Info.Panicln("[main] API Server启动")
 
 	r := GinRouter()
 	// 默认监听本地(ipv4 + ipv6) 8080 端口

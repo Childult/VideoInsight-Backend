@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
-	"swc/logger"
 	"swc/mongodb"
 	"swc/mongodb/abstext"
 	"swc/mongodb/absvideo"
@@ -28,7 +27,6 @@ import (
 
 func TestPicture(t *testing.T) {
 	mongodb.SWCDB = "test"
-	logger.InitLog()
 
 	job, _ := job.GetByKey("b89259c2efa49ae0cd3db665")
 	av := absvideo.AbsVideo{URL: job.URL}
@@ -52,7 +50,6 @@ func TestPicture(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	mongodb.SWCDB = "test"
-	logger.InitLog()
 
 	// 启动服务器
 	router := GinRouter()
@@ -135,7 +132,6 @@ func videoTestHandle(job *job.Job, result []string) {
 
 func TestMediaDownload(t *testing.T) {
 	mongodb.SWCDB = "test"
-	logger.InitLog()
 	// python 下载
 	python := server.PyWorker{
 		PackagePath: "/swc/code/video_getter/",
@@ -168,7 +164,6 @@ func TestMediaDownload(t *testing.T) {
 
 func TestVideoAbstract(t *testing.T) {
 	mongodb.SWCDB = "test"
-	logger.InitLog()
 	// python 测试
 	python := server.PyWorker{
 		PackagePath: "/swc/code/video_analysis/",
@@ -202,7 +197,6 @@ func TestVideoAbstract(t *testing.T) {
 func TestDeleteAll(t *testing.T) {
 	// 删除所有数据
 	mongodb.SWCDB = "test"
-	logger.InitLog()
 	filter := bson.M{}
 
 	err := mongodb.DeleteManyByfilter("job", filter)
@@ -307,7 +301,6 @@ func TestJob(t *testing.T) {
 
 func TestTextAnalysis(t *testing.T) {
 	mongodb.SWCDB = "test"
-	logger.InitLog()
 
 	// 启动服务器
 	router := GinRouter()

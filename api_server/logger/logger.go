@@ -19,8 +19,8 @@ var (
 	Error *log.Logger
 )
 
-// InitLog 初始化
-func InitLog() {
+// 初始化日志
+func init() {
 	infoFile, err := os.OpenFile(filepath.Join(util.LogFile, "info.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Open LogFile Error：", err)

@@ -5,7 +5,6 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	InitLog()
 
 	Debug.Println("hello")
 	Warning.Println("hello")
