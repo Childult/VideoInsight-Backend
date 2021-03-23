@@ -13,7 +13,7 @@ logger = logging.getLogger('main.api')
 logger.setLevel(level=logging.INFO)
 
 # 处理时间不应超过视频时间（分钟）的倍数
-TIME_OUT_RATIO = 4
+TIME_OUT_RATIO = 2
 
 
 def generate_abstract_from_video(file: str, save_dir: str) -> dict:
@@ -38,21 +38,13 @@ def generate_abstract_from_video(file: str, save_dir: str) -> dict:
     begin = time.time()
 
     try:
-        # 对视频进行摘要，得到浓缩版视频
-        compressed_video = func_timeout(video_min * TIME_OUT_RATIO * 60, video_summarize, args=(file, save_dir))
+        ret['VAbstract'] = func_timeout(video_min * TIME_OUT_RATIO * 60, extract_key_frame, args=(file, save_dir))
     except FunctionTimedOut:
-        logger.error("summarize the video time out!")
+        logger.error("视频摘要超时")
         ret['Error'] = '视频摘要超时'
     except Exception as e:
         logger.error(e, exc_info=True)
-        ret['Error'] = 'failed to summarize the video: ' + str(e)
-    else:
-        # 若无异常则进行下一步操作
-        try:
-            ret['VAbstract'] = extract_key_frame(compressed_video, save_dir)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            ret['Error'] = 'failed to extract key frames: ' + str(e)
+        ret['Error'] = '提取关键帧失败: ' + str(e)
 
     logger.info('视频 %s, 时长：%d 分钟, 处理时间上限：%d 分钟，实际耗时：%d 分钟',
                 file, video_min, video_min * TIME_OUT_RATIO, (time.time() - begin) / 60)
@@ -76,7 +68,7 @@ def get_video_duration(file: str) -> int:
     return math.ceil(frame_counter / fps / 60)
 
 
-def extract_key_frame(file: str, save_dir: str, num=5) -> [str]:
+def extract_key_frame(file: str, save_dir: str, num=10) -> [str]:
     """
     提取视频中的关键帧
     :param file: 视频所在路径
@@ -99,4 +91,4 @@ def video_summarize(file: str, save_dir: str) -> str:
 
 if __name__ == '__main__':
     init_logger()
-    print(generate_abstract_from_video('/swc/resource/tests/imad.mp4', '/swc/resource/tests/'))
+    print(generate_abstract_from_video('/swc/resource/1616397097/MTYxNjM5NzEzNy4yNDI3MjhodHRwczovL3d3dy5iaWxpYmlsaS5jb20vdmlkZW8vQlYxQnY0MTFrNzQ1.mp4', '/swc/resource/tests/'))
