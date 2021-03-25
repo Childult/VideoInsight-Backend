@@ -137,6 +137,7 @@ func TestGobEncode(t *testing.T) {
 	_, actualErr = conn.Do("set", "id1", buf.Bytes())
 	assert.Equal(t, expectErr, actualErr)
 
+	// 反序列化读取数据
 	expectErr = nil
 	readBytes, actualErr := redis.Bytes(conn.Do("get", "id1"))
 	assert.Equal(t, expectErr, actualErr)
