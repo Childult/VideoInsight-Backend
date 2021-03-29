@@ -3,7 +3,6 @@ package abstext
 import (
 	"context"
 	"fmt"
-	"swc/dbs"
 	"swc/dbs/mongodb"
 	"swc/logger"
 
@@ -11,59 +10,65 @@ import (
 )
 
 // haveExisted 通过数据的主键, 查看数据是否存在
-func haveExisted(data dbs.PrimaryKey) (b bool) {
+func (at *AbsText) ExistInMongodb() (b bool) {
 	// 获取 media collection 的句柄
 	coll := mongodb.Get(Database, Collection)
-	result := coll.FindOne(context.TODO(), bson.M{data.GetKeyTag(): data.GetKeyValue()})
+	result := coll.FindOne(context.TODO(), bson.M{at.GetKeyTag(): at.GetKeyValue()})
 	return result.Err() == nil
 }
 
 // Dump 将数据持久化到 mongodb 中
-func (av *AbsText) Dump() (err error) {
+func (at *AbsText) Dump() (err error) {
 	// 检查数据是否存在
-	if haveExisted(av) {
+	if at.ExistInMongodb() {
 		// 存在则更新
 		coll := mongodb.Get(Database, Collection)                                               // 获取 media collection 的句柄
-		_, err = coll.ReplaceOne(context.TODO(), bson.M{av.GetKeyTag(): av.GetKeyValue()}, *av) // 更新
+		_, err = coll.ReplaceOne(context.TODO(), bson.M{at.GetKeyTag(): at.GetKeyValue()}, *at) // 更新
 	} else {
 		// 不存在则插入
 		coll := mongodb.Get(Database, Collection)    // 获取 media collection 的句柄
-		_, err = coll.InsertOne(context.TODO(), *av) // 插入
+		_, err = coll.InsertOne(context.TODO(), *at) // 插入
 	}
 
 	if err != nil {
 		logger.Error.Println(err.Error())
-		err = fmt.Errorf("数据<%v>插入失败", *av)
+		err = fmt.Errorf("数据<%v>插入失败", *at)
 		return err
 	}
 	return err
 }
 
 // Load 从 mongodb 中加载数据
-func (av *AbsText) Load() (err error) {
-	coll := mongodb.Get(Database, Collection) // 获取 collection 的句柄
+func (at *AbsText) Load() (err error) {
+	// 检查数据是否存在
+	if at.ExistInMongodb() {
+		coll := mongodb.Get(Database, Collection) // 获取 collection 的句柄
 
-	// 加载数据
-	absText := AbsText{}
-	err = coll.FindOne(context.TODO(), bson.M{av.GetKeyTag(): av.GetKeyValue()}).Decode(&absText)
-	*av = absText
-	if err != nil {
-		logger.Error.Println(err.Error())
-		err = fmt.Errorf("未找到<%v>", av)
+		// 加载数据
+		absText := AbsText{}
+		err = coll.FindOne(context.TODO(), bson.M{at.GetKeyTag(): at.GetKeyValue()}).Decode(&absText)
+		*at = absText
+		if err != nil {
+			logger.Error.Println(err.Error())
+			err = fmt.Errorf("未知<%v>", err)
+		}
+		return err
+	} else {
+		err = fmt.Errorf("未找到<%v>", at)
+		return err
 	}
-	return err
 }
 
 // Delete 从 mongodb 中删除数据
-func (av *AbsText) Delete() (err error) {
+func (at *AbsText) Delete() (err error) {
 	// 检查数据是否存在
-	if haveExisted(av) {
+	if at.ExistInMongodb() {
 		coll := mongodb.Get(Database, Collection) // 获取 collection 的句柄
 		// 删除
-		_, err = coll.DeleteOne(context.TODO(), bson.M{av.GetKeyTag(): av.GetKeyValue()})
+		_, err = coll.DeleteOne(context.TODO(), bson.M{at.GetKeyTag(): at.GetKeyValue()})
 		if err != nil {
 			logger.Error.Println(err.Error())
-			err = fmt.Errorf("删除<%v>失败", av)
+			err = fmt.Errorf("删除<%v>失败", at)
 		}
 	}
 

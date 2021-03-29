@@ -1,8 +1,8 @@
 package server
 
 import (
+	"swc/data/job"
 	"swc/logger"
-	"swc/mongodb/job"
 	"swc/util"
 )
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"swc/logger"
-	"swc/router"
+	job_router "swc/router/job"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,20 +12,20 @@ func GinRouter() (r *gin.Engine) {
 	r = gin.Default()
 
 	// 创建任务
-	r.POST("/job", router.PostJob)
+	r.POST("/job", job_router.PostJob)
 
 	// 查询任务
-	r.GET("/job/:job_id", router.GetJob)
+	r.GET("/job/:job_id", job_router.GetJob)
 
 	// 删除任务
-	r.DELETE("/job", router.DeleteJob)
+	r.DELETE("/job", job_router.DeleteJob)
 
 	return r
 }
 
 func main() {
 	// 初始化日志
-	logger.Info.Panicln("[main] API Server启动")
+	logger.Info.Println("[main] API Server启动")
 
 	r := GinRouter()
 	// 默认监听本地(ipv4 + ipv6) 8080 端口

@@ -9,6 +9,15 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
+// existInRedis 通过数据的主键, 查看数据是否存在
+func (r *Resource) existInRedis() (b bool) {
+	conn := swcredis.Get() // 获取连接
+	defer conn.Close()     // 释放连接
+
+	b, _ = redis.Bool(conn.Do("exists", r.GetKeyValue()))
+	return
+}
+
 // Save 保存到 redis 中
 func (r *Resource) Save() (err error) {
 	conn := swcredis.Get() // 获取连接
@@ -32,38 +41,47 @@ func (r *Resource) Save() (err error) {
 
 // Get 从 redis 中读出
 func (r *Resource) Retrieve() (err error) {
-	conn := swcredis.Get() // 获取连接
-	defer conn.Close()     // 释放连接
+	if r.existInRedis() {
 
-	readBytes, err := redis.Bytes(conn.Do("get", r.GetKeyValue()))
-	if err != nil {
-		err = fmt.Errorf("从redis中读取<%v>失败; 原始错误<%s>", r.GetKeyValue(), err)
+		conn := swcredis.Get() // 获取连接
+		defer conn.Close()     // 释放连接
+
+		readBytes, err := redis.Bytes(conn.Do("get", r.GetKeyValue()))
+		if err != nil {
+			err = fmt.Errorf("从redis中读取<%v>失败; 原始错误<%s>", r.GetKeyValue(), err)
+			return err
+		}
+
+		reader := bytes.NewReader(readBytes)
+		decode := gob.NewDecoder(reader)
+
+		// 反序列化
+		resource := Resource{}
+		err = decode.Decode(&resource)
+		*r = resource
+		if err != nil {
+			err = fmt.Errorf("反序列化<%v>失败; 原始错误<%s>", r.GetKeyValue(), err)
+		}
+
+		return err
+	} else {
+		err = fmt.Errorf("数据不存在: <%v>", r)
 		return err
 	}
-
-	reader := bytes.NewReader(readBytes)
-	decode := gob.NewDecoder(reader)
-
-	// 反序列化
-	resource := Resource{}
-	err = decode.Decode(&resource)
-	*r = resource
-	if err != nil {
-		err = fmt.Errorf("反序列化<%v>失败; 原始错误<%s>", r.GetKeyValue(), err)
-	}
-
-	return err
 }
 
 // Remove 从 redis 中移除
 func (r *Resource) Remove() (err error) {
-	conn := swcredis.Get() // 获取连接
-	defer conn.Close()     // 释放连接
+	if r.existInRedis() {
+		conn := swcredis.Get() // 获取连接
+		defer conn.Close()     // 释放连接
 
-	_, err = conn.Do("del", r.GetKeyValue())
-	if err != nil {
-		err = fmt.Errorf("<%v>移除; 原始错误<%s>", *r, err)
-		return err
+		// 移除数据
+		_, err = conn.Do("del", r.GetKeyValue())
+		if err != nil {
+			err = fmt.Errorf("<%v>移除; 原始错误<%s>", *r, err)
+		}
+
 	}
 	return
 }

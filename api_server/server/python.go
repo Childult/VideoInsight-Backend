@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"swc/data/job"
 	"swc/logger"
-	"swc/mongodb/job"
 	"swc/util"
 	"sync"
 )
@@ -27,7 +27,7 @@ func SetArg(i interface{}) string {
 	case string:
 		result = fmt.Sprintf("'%s'", string(i))
 	case int:
-		result = fmt.Sprintf("%s", strconv.Itoa(i))
+		result = strconv.Itoa(i)
 	}
 	return result
 }

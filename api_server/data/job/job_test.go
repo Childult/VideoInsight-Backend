@@ -22,6 +22,7 @@ func TestRedis(t *testing.T) {
 		NewJob("设备ID", "网址", []string{}),
 		NewJob("设备ID", "", []string{}),
 		NewJob("", "", []string{}),
+		NewJob("", "", nil),
 	}
 	var err error
 	newJob := &Job{}
@@ -52,6 +53,7 @@ func TestMongodb(t *testing.T) {
 		NewJob("设备ID", "网址", []string{}),
 		NewJob("设备ID", "", []string{}),
 		NewJob("", "", []string{}),
+		NewJob("", "", nil),
 	}
 	var err error
 	newJob := &Job{}
