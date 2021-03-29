@@ -13,7 +13,7 @@ type AbsText struct {
 	URL      string   `bson:"url"                 json:"url"`                 // 对应链接地址
 	KeyWords []string `bson:"key_words,omitempty" json:"key_words,omitempty"` // 关键字
 	Text     string   `bson:"text"                json:"text"`                // 语音识别
-	Abstract string   `bson:"abstract"            json:"abstract"`            // 摘要
+	Abstract []string `bson:"abstract"            json:"abstract"`            // 摘要
 }
 
 // GetKeyTag 返回主键标签
@@ -32,7 +32,7 @@ func (at AbsText) GetCollName() string {
 }
 
 // NewAbsText 构建结构体
-func NewAbsText(url, text, abstract string, keyWords []string) (at AbsText) {
+func NewAbsText(url, text string, abstract []string, keyWords []string) (at AbsText) {
 	at.URL = url
 	at.Text = text
 	at.Abstract = abstract
@@ -54,6 +54,6 @@ func (at *AbsText) getAbsHash() string {
 
 // HaveAbsTextExisted 根据判断是否已经存在
 func HaveAbsTextExisted(url string, keyWords []string) bool {
-	at := NewAbsText(url, "", "", keyWords)
+	at := NewAbsText(url, "", nil, keyWords)
 	return mongodb.HaveExisted(at)
 }

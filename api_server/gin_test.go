@@ -94,7 +94,7 @@ func TestGet(t *testing.T) {
 func TestGetText(t *testing.T) {
 	mongodb.SWCDB = "test"
 	logger.InitLog()
-	at := abstext.NewAbsText("https://www.bilibili.com/video/BV18r4y1A7Uv", "", "", []string{})
+	at := abstext.NewAbsText("https://www.bilibili.com/video/BV18r4y1A7Uv", "", nil, []string{})
 
 	data, _ := mongodb.FindOne(at)
 	for key, value := range data {
@@ -196,7 +196,7 @@ func TestVideoAbstract(t *testing.T) {
 			break
 		}
 	}
-	fmt.Printf("%+v, %+v\n", python, jobs)
+	fmt.Printf("结果: %+v, %+v\n", python, jobs)
 }
 
 func TestDeleteAll(t *testing.T) {

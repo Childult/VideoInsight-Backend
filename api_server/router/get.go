@@ -31,7 +31,7 @@ func GetJob(c *gin.Context) {
 		logger.Error.Println("[GET] 获取资源出错")
 		rt = ReturnType{
 			Status:  -3,
-			Message: fmt.Sprintf("非找到`job_id=%s`的任务", jobID),
+			Message: fmt.Sprintf("未找到`job_id=%s`的任务", jobID),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)
 		return
@@ -60,7 +60,7 @@ func GetJob(c *gin.Context) {
 			Status:  int(job.Status),
 			Message: util.GetJobStatus(job.Status),
 			Result: gin.H{
-				"text":     text,
+				"text":     text["abstract"],
 				"pictures": pics,
 			}}
 	} else {
@@ -69,6 +69,6 @@ func GetJob(c *gin.Context) {
 			Message: util.GetJobStatus(job.Status),
 			Result:  ""}
 	}
-	logger.Debug.Printf("[GET] 返回状态%+v.\n", rt)
+	logger.Debug.Printf("[GET] 返回状态{%+v: %+v}.\n", rt.Status, rt.Message)
 	c.JSON(http.StatusOK, rt)
 }
