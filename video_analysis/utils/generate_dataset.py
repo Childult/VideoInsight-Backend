@@ -20,6 +20,8 @@ import cv2
 import numpy as np
 import h5py
 
+from utils.logger import TqdmToLogger
+
 logger = logging.getLogger('main.dataset')
 logger.setLevel(level=logging.INFO)
 
@@ -101,9 +103,10 @@ class Generate_Dataset:
             video_feat_for_train = []
 
             # 视频特征采样率，数值越大，采样越多，处理时间越长
-            sampling_rate = 6
+            sampling_rate = 4
             prev = None
-            for frame_idx in tqdm(range(n_frames - 1)):
+            tqdm_out = TqdmToLogger(logger, level=logging.INFO)
+            for frame_idx in tqdm(range(n_frames - 1), file=tqdm_out, mininterval=30, ):
                 if frame_idx % (fps // sampling_rate + 2) == 0:
                     success, frame = video_capture.read()
                     if success:

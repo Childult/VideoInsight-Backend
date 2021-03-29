@@ -41,3 +41,7 @@ def download_video(url: str, path: str) -> str:
         return "Error: {0}".format(str(e))
 
     return title + '.' + container
+
+
+if __name__ == '__main__':
+    download_video('<test url>', '.')
