@@ -3,7 +3,7 @@ import json
 import time
 
 from audio_analysis.api import audio_to_text
-from text_analysis.utils import sen_generator, preprocess_audio_text, segment_split, sentence_split
+from text_analysis.utils import sen_generator, preprocess_audio_text, segment_split
 from text_analysis.tencent import TENCENT_API
 
 
