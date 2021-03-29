@@ -13,7 +13,7 @@ logger = logging.getLogger('main.api')
 logger.setLevel(level=logging.INFO)
 
 # 处理时间不应超过视频时间（分钟）的倍数
-TIME_OUT_RATIO = 4
+TIME_OUT_RATIO = 2
 
 
 def generate_abstract_from_video(file: str, save_dir: str) -> dict:
@@ -30,29 +30,27 @@ def generate_abstract_from_video(file: str, save_dir: str) -> dict:
 
     try:
         video_min = get_video_duration(file)
+        keyframe_count = decide_frame_num(video_min)
     except Exception as e:
         logger.error(e, exc_info=True)
         ret['Error'] = str(e)
         return ret
 
     begin = time.time()
+    logger.info('%s: 开始视频摘要，提取 %d 帧', file, keyframe_count)
 
     try:
-        # 对视频进行摘要，得到浓缩版视频
-        compressed_video = func_timeout(video_min * TIME_OUT_RATIO * 60, video_summarize, args=(file, save_dir))
+        ret['VAbstract'] = func_timeout(
+            video_min * TIME_OUT_RATIO * 60,
+            extract_key_frame,
+            args=(file, save_dir, keyframe_count)
+        )
     except FunctionTimedOut:
-        logger.error("summarize the video time out!")
+        logger.error("视频摘要超时")
         ret['Error'] = '视频摘要超时'
     except Exception as e:
         logger.error(e, exc_info=True)
-        ret['Error'] = 'failed to summarize the video: ' + str(e)
-    else:
-        # 若无异常则进行下一步操作
-        try:
-            ret['VAbstract'] = extract_key_frame(compressed_video, save_dir)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            ret['Error'] = 'failed to extract key frames: ' + str(e)
+        ret['Error'] = '提取关键帧失败: ' + str(e)
 
     logger.info('视频 %s, 时长：%d 分钟, 处理时间上限：%d 分钟，实际耗时：%d 分钟',
                 file, video_min, video_min * TIME_OUT_RATIO, (time.time() - begin) / 60)
@@ -76,7 +74,21 @@ def get_video_duration(file: str) -> int:
     return math.ceil(frame_counter / fps / 60)
 
 
-def extract_key_frame(file: str, save_dir: str, num=5) -> [str]:
+def decide_frame_num(duration: int) -> int:
+    """
+    根据视频的长度决定提取关键帧的数目
+    :param duration: 视频长度，单位：分钟
+    :return: 要提取关键帧的数目
+    """
+    if duration <= 20:
+        return 5
+    elif 20 < duration <= 60:
+        return 10
+    else:
+        return 10 + (duration - 60) // 30 * 5
+
+
+def extract_key_frame(file: str, save_dir: str, num: int) -> [str]:
     """
     提取视频中的关键帧
     :param file: 视频所在路径
@@ -99,4 +111,6 @@ def video_summarize(file: str, save_dir: str) -> str:
 
 if __name__ == '__main__':
     init_logger()
-    print(generate_abstract_from_video('/swc/resource/tests/imad.mp4', '/swc/resource/tests/'))
+    print(generate_abstract_from_video(
+        '/swc/resource/1616397097/MTYxNjM5NzEzNy4yNDI3MjhodHRwczovL3d3dy5iaWxpYmlsaS5jb20vdmlkZW8vQlYxQnY0MTFrNzQ1.mp4',
+        '/swc/resource/tests/'))
