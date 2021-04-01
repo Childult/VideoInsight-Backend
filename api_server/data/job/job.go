@@ -22,14 +22,19 @@ type Job struct {
 	AbsText  string   `bson:"abstract_text"       json:"abstract_text"` // 文本摘要在数据库中的哈希值, 可以复用
 }
 
-// GetKeyTag 返回主键名
-func (j *Job) GetKeyTag() string {
+// Tag 返回主键名
+func (j *Job) Tag() string {
 	return "job_id"
 }
 
-// GetKeyValue 返回主键值
-func (j *Job) GetKeyValue() string {
+// Value 返回主键值
+func (j *Job) Value() string {
 	return j.JobID
+}
+
+// Coll 返回表名
+func (j *Job) Coll() string {
+	return Collection
 }
 
 func NewJob(dID, url string, keyWords []string) (j *Job) {

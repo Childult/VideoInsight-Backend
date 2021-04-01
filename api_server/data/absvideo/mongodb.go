@@ -13,7 +13,7 @@ import (
 func (av *AbsVideo) ExistInMongodb() (b bool) {
 	// 获取 media collection 的句柄
 	coll := mongodb.Get(Database, Collection)
-	result := coll.FindOne(context.TODO(), bson.M{av.GetKeyTag(): av.GetKeyValue()})
+	result := coll.FindOne(context.TODO(), bson.M{av.Tag(): av.Value()})
 	return result.Err() == nil
 }
 
@@ -22,8 +22,8 @@ func (av *AbsVideo) Dump() (err error) {
 	// 检查数据是否存在
 	if av.ExistInMongodb() {
 		// 存在则更新
-		coll := mongodb.Get(Database, Collection)                                               // 获取 media collection 的句柄
-		_, err = coll.ReplaceOne(context.TODO(), bson.M{av.GetKeyTag(): av.GetKeyValue()}, *av) // 更新
+		coll := mongodb.Get(Database, Collection)                                   // 获取 media collection 的句柄
+		_, err = coll.ReplaceOne(context.TODO(), bson.M{av.Tag(): av.Value()}, *av) // 更新
 	} else {
 		// 不存在则插入
 		coll := mongodb.Get(Database, Collection)    // 获取 media collection 的句柄
@@ -46,7 +46,7 @@ func (av *AbsVideo) Load() (err error) {
 
 		// 加载数据
 		absVideo := AbsVideo{}
-		err = coll.FindOne(context.TODO(), bson.M{av.GetKeyTag(): av.GetKeyValue()}).Decode(&absVideo)
+		err = coll.FindOne(context.TODO(), bson.M{av.Tag(): av.Value()}).Decode(&absVideo)
 		*av = absVideo
 		if err != nil {
 			logger.Error.Println(err.Error())
@@ -66,7 +66,7 @@ func (av *AbsVideo) Delete() (err error) {
 	if av.ExistInMongodb() {
 		coll := mongodb.Get(Database, Collection) // 获取 collection 的句柄
 		// 删除
-		_, err = coll.DeleteOne(context.TODO(), bson.M{av.GetKeyTag(): av.GetKeyValue()})
+		_, err = coll.DeleteOne(context.TODO(), bson.M{av.Tag(): av.Value()})
 		if err != nil {
 			logger.Error.Println(err.Error())
 			err = fmt.Errorf("删除<%v>失败", av)

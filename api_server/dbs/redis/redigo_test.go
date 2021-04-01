@@ -249,13 +249,6 @@ func TestCRUD(t *testing.T) {
 	var expectErr, actualErr error
 	var expectBool, actualBool bool
 	var d *fakeData = new(fakeData)
-	conn := Get()      // 获取连接
-	defer conn.Close() // 释放连接
-
-	// 切换到1号数据库, 防止数据污染
-	expectErr = nil
-	_, actualErr = conn.Do("select", 1)
-	assert.Equal(t, expectErr, actualErr)
 
 	// 数据一开始不存在
 	expectBool = false

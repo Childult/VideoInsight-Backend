@@ -11,12 +11,17 @@ type AbsVideo struct {
 	Abstract []string `bson:"abstract"            json:"abstract"` // 视频摘要地址, 每一项是一张图片
 }
 
-// GetKeyTag 返回主键标签
-func (av *AbsVideo) GetKeyTag() string {
+// Tag 返回主键标签
+func (av *AbsVideo) Tag() string {
 	return "url"
 }
 
-// GetKeyValue 返回主键值
-func (av *AbsVideo) GetKeyValue() string {
+// Value 返回主键值
+func (av *AbsVideo) Value() string {
 	return av.URL
+}
+
+// Coll 返回表名
+func (av *AbsVideo) Coll() string {
+	return Collection
 }

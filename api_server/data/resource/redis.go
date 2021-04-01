@@ -14,7 +14,7 @@ func (r *Resource) existInRedis() (b bool) {
 	conn := swcredis.Get() // 获取连接
 	defer conn.Close()     // 释放连接
 
-	b, _ = redis.Bool(conn.Do("exists", r.GetKeyValue()))
+	b, _ = redis.Bool(conn.Do("exists", r.Value()))
 	return
 }
 
@@ -31,7 +31,7 @@ func (r *Resource) Save() (err error) {
 		return
 	}
 
-	_, err = conn.Do("set", r.GetKeyValue(), buf.Bytes())
+	_, err = conn.Do("set", r.Value(), buf.Bytes())
 	if err != nil {
 		err = fmt.Errorf("<%v>保存到 redis 失败; 原始错误<%s>", *r, err)
 		return
@@ -46,9 +46,9 @@ func (r *Resource) Retrieve() (err error) {
 		conn := swcredis.Get() // 获取连接
 		defer conn.Close()     // 释放连接
 
-		readBytes, err := redis.Bytes(conn.Do("get", r.GetKeyValue()))
+		readBytes, err := redis.Bytes(conn.Do("get", r.Value()))
 		if err != nil {
-			err = fmt.Errorf("从redis中读取<%v>失败; 原始错误<%s>", r.GetKeyValue(), err)
+			err = fmt.Errorf("从redis中读取<%v>失败; 原始错误<%s>", r.Value(), err)
 			return err
 		}
 
@@ -60,7 +60,7 @@ func (r *Resource) Retrieve() (err error) {
 		err = decode.Decode(&resource)
 		*r = resource
 		if err != nil {
-			err = fmt.Errorf("反序列化<%v>失败; 原始错误<%s>", r.GetKeyValue(), err)
+			err = fmt.Errorf("反序列化<%v>失败; 原始错误<%s>", r.Value(), err)
 		}
 
 		return err
@@ -77,7 +77,7 @@ func (r *Resource) Remove() (err error) {
 		defer conn.Close()     // 释放连接
 
 		// 移除数据
-		_, err = conn.Do("del", r.GetKeyValue())
+		_, err = conn.Do("del", r.Value())
 		if err != nil {
 			err = fmt.Errorf("<%v>移除; 原始错误<%s>", *r, err)
 		}

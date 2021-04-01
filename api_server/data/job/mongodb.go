@@ -13,7 +13,7 @@ import (
 func (j *Job) ExistInMongodb() (b bool) {
 	// 获取 media collection 的句柄
 	coll := mongodb.Get(Database, Collection)
-	result := coll.FindOne(context.TODO(), bson.M{j.GetKeyTag(): j.GetKeyValue()})
+	result := coll.FindOne(context.TODO(), bson.M{j.Tag(): j.Value()})
 	return result.Err() == nil
 }
 
@@ -22,8 +22,8 @@ func (j *Job) Dump() (err error) {
 	// 检查数据是否存在
 	if j.ExistInMongodb() {
 		// 存在则更新
-		coll := mongodb.Get(Database, Collection)                                            // 获取 media collection 的句柄
-		_, err = coll.ReplaceOne(context.TODO(), bson.M{j.GetKeyTag(): j.GetKeyValue()}, *j) // 更新
+		coll := mongodb.Get(Database, Collection)                                // 获取 media collection 的句柄
+		_, err = coll.ReplaceOne(context.TODO(), bson.M{j.Tag(): j.Value()}, *j) // 更新
 	} else {
 		// 不存在则插入
 		coll := mongodb.Get(Database, Collection)   // 获取 media collection 的句柄
@@ -46,7 +46,7 @@ func (j *Job) Load() (err error) {
 
 		// 加载数据
 		job := Job{}
-		err = coll.FindOne(context.TODO(), bson.M{j.GetKeyTag(): j.GetKeyValue()}).Decode(&job)
+		err = coll.FindOne(context.TODO(), bson.M{j.Tag(): j.Value()}).Decode(&job)
 		*j = job
 		if err != nil {
 			logger.Warning.Println(err.Error())
@@ -65,7 +65,7 @@ func (j *Job) Delete() (err error) {
 	if j.ExistInMongodb() {
 		coll := mongodb.Get(Database, Collection) // 获取 collection 的句柄
 		// 删除
-		_, err = coll.DeleteOne(context.TODO(), bson.M{j.GetKeyTag(): j.GetKeyValue()})
+		_, err = coll.DeleteOne(context.TODO(), bson.M{j.Tag(): j.Value()})
 		if err != nil {
 			logger.Error.Println(err.Error())
 			err = fmt.Errorf("删除<%v>失败", j)

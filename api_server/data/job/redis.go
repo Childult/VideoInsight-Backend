@@ -14,7 +14,7 @@ func (j *Job) existInRedis() (b bool) {
 	conn := swcredis.Get() // 获取连接
 	defer conn.Close()     // 释放连接
 
-	b, _ = redis.Bool(conn.Do("exists", j.GetKeyValue()))
+	b, _ = redis.Bool(conn.Do("exists", j.Value()))
 	return
 }
 
@@ -31,7 +31,7 @@ func (j *Job) Save() (err error) {
 		return
 	}
 
-	_, err = conn.Do("set", j.GetKeyValue(), buf.Bytes())
+	_, err = conn.Do("set", j.Value(), buf.Bytes())
 	if err != nil {
 		err = fmt.Errorf("<%v>保存到 redis 失败; 原始错误<%s>", *j, err)
 		return
@@ -45,9 +45,9 @@ func (j *Job) Retrieve() (err error) {
 		conn := swcredis.Get() // 获取连接
 		defer conn.Close()     // 释放连接
 
-		readBytes, err := redis.Bytes(conn.Do("get", j.GetKeyValue()))
+		readBytes, err := redis.Bytes(conn.Do("get", j.Value()))
 		if err != nil {
-			err = fmt.Errorf("从redis中读取<%v>失败; 原始错误<%s>", j.GetKeyValue(), err)
+			err = fmt.Errorf("从redis中读取<%v>失败; 原始错误<%s>", j.Value(), err)
 			return err
 		}
 
@@ -59,7 +59,7 @@ func (j *Job) Retrieve() (err error) {
 		err = decode.Decode(&job)
 		*j = job
 		if err != nil {
-			err = fmt.Errorf("反序列化<%v>失败; 原始错误<%s>", j.GetKeyValue(), err)
+			err = fmt.Errorf("反序列化<%v>失败; 原始错误<%s>", j.Value(), err)
 		}
 		return err
 	} else {
@@ -75,7 +75,7 @@ func (j *Job) Remove() (err error) {
 		defer conn.Close()     // 释放连接
 
 		// 删除数据
-		_, err = conn.Do("del", j.GetKeyValue())
+		_, err = conn.Do("del", j.Value())
 		if err != nil {
 			err = fmt.Errorf("<%v>移除; 原始错误<%s>", *j, err)
 		}

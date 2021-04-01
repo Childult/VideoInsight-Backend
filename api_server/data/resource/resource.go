@@ -15,12 +15,17 @@ type Resource struct {
 	AbsText   string `bson:"abstract_text"      json:"abstract_text"` // 无关键词对应的文本摘要哈希
 }
 
-// GetKeyTag 返回主键标签
-func (r *Resource) GetKeyTag() string {
+// Tag 返回主键标签
+func (r *Resource) Tag() string {
 	return "url"
 }
 
-// GetKeyValue 返回主键值
-func (r *Resource) GetKeyValue() string {
+// Value 返回主键值
+func (r *Resource) Value() string {
 	return r.URL
+}
+
+// Coll 返回表名
+func (r *Resource) Coll() string {
+	return Collection
 }
