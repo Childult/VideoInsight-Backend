@@ -23,7 +23,7 @@ type JobPostMessage struct {
 }
 
 // PostJob is used to process "/job" post requests, job will be created
-func PostJob(c *gin.Context) {
+var PostJob = func(c *gin.Context) {
 	logger.Info.Println("[POST] 开始")
 	var rt ReturnType
 	var err error

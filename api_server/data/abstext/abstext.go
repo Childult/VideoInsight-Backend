@@ -17,17 +17,22 @@ type AbsText struct {
 	URL      string   `bson:"url"                 json:"url"`                 // 对应链接地址
 	KeyWords []string `bson:"key_words,omitempty" json:"key_words,omitempty"` // 关键字
 	Text     string   `bson:"text"                json:"text"`                // 语音识别
-	Abstract string   `bson:"abstract"            json:"abstract"`            // 摘要
+	Abstract []string `bson:"abstract"            json:"abstract"`            // 摘要
 }
 
-// GetKeyTag 返回主键标签
-func (at *AbsText) GetKeyTag() string {
+// Tag 返回主键标签
+func (at *AbsText) Tag() string {
 	return "hash"
 }
 
-// GetKeyValue 返回主键值
-func (at *AbsText) GetKeyValue() string {
+// Value 返回主键值
+func (at *AbsText) Value() string {
 	return at.Hash
+}
+
+// Coll 返回表名
+func (at *AbsText) Coll() string {
+	return Collection
 }
 
 func NewAbsText(url string, keyWords []string) (at *AbsText) {

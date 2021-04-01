@@ -1,11 +1,19 @@
 package main
 
 import (
+	"swc/dbs/mongodb"
+	"swc/dbs/redis"
 	"swc/logger"
 	job_router "swc/router/job"
+	"swc/util"
 
 	"github.com/gin-gonic/gin"
 )
+
+func init() {
+	redis.InitRedis(util.RedisAddr, util.RedisPW)                     // 连接 redis
+	mongodb.InitMongodb(util.MongoAddr, util.MongoUser, util.MongoPW) // 连接 mongodb
+}
 
 // GinRouter 路由
 func GinRouter() (r *gin.Engine) {

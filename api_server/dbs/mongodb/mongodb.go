@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"swc/logger"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -38,7 +39,7 @@ func InitMongodb(addr, user, password string) {
 	opts.SetMaxConnIdleTime(idleTimeout)                   // 每个连接持续最长时间
 	pool.Client, err = mongo.Connect(context.TODO(), opts) // 创建全局连接
 	if err != nil {
-		panic("mongodb connect failed")
+		logger.Error.Fatal("mongodb connect failed")
 	}
 }
 
@@ -48,4 +49,12 @@ func InitMongodb(addr, user, password string) {
 // coll: 对应集合的句柄
 func Get(dbName, collName string) (coll *mongo.Collection) {
 	return pool.Database(dbName).Collection(collName)
+}
+
+// mongoData 定义 mongodb 数据的接口, 实现该接口可以在 mongodb 里增删改查
+// 需要知道主键名, 主键值, 表名
+type mongoData interface {
+	Tag() string
+	Value() string
+	Coll() string
 }

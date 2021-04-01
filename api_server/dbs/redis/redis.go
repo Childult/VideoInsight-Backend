@@ -72,3 +72,9 @@ func ping(c redigo.Conn, t time.Time) error {
 func Get() redigo.Conn {
 	return poll.Get()
 }
+
+// redisData 定义 redis 数据的接口, 实现该接口可以在 redis 里增删改查
+// redis 是键值对数据库, 只需要知道主键值就行了
+type redisData interface {
+	Value() string
+}

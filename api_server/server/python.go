@@ -140,7 +140,7 @@ func HandleOut(wg *sync.WaitGroup, r io.Reader, job *job.Job, handles PythonHand
 func EasyOut(wg *sync.WaitGroup, r io.Reader) {
 	logger.Debug.Println("[EasyOut] 开始.")
 	var sb strings.Builder
-	buf := make([]byte, 256)
+	buf := make([]byte, 1024*10)
 
 	for {
 		sb.Reset()

@@ -62,9 +62,9 @@ func textAnalysis(job *job.Job) {
 
 // textAbstract 用于存储文本分析的结果
 type textAbstract struct {
-	AText     string `json:"AText"`
-	TAbstract string `json:"TAbstract"`
-	Error     string `json:"Error"`
+	AText     string   `json:"AText"`
+	TAbstract []string `json:"TAbstract"`
+	Error     string   `json:"Error"`
 }
 
 // textHandle 文本分析的回调

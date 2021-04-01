@@ -9,7 +9,7 @@ import (
 )
 
 // DeleteJob handle delete "/job"
-func DeleteJob(c *gin.Context) {
+var DeleteJob = func(c *gin.Context) {
 	logger.Debug.Println("[DELETE] 开始")
 	var rt ReturnType
 	var err error

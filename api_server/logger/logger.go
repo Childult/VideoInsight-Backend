@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	// Info 调试
+	// Info 常规
 	Info *log.Logger
 	// Warning 警告
 	Warning *log.Logger
-	// Debug 常规
+	// Debug 调试, 所有信息都会出现在 debug 文件中
 	Debug *log.Logger
 	// Error 错误
 	Error *log.Logger
@@ -38,8 +38,9 @@ func init() {
 		log.Fatalln("Open LogFile Error：", err)
 	}
 
-	Info = log.New(io.MultiWriter(os.Stderr, infoFile, debugFile), "Debug:", log.Ldate|log.Ltime|log.Lshortfile)
-	Warning = log.New(io.MultiWriter(os.Stderr, warningFile, debugFile), "Warning:", log.Ldate|log.Ltime|log.Lshortfile)
-	Debug = log.New(io.MultiWriter(debugFile), "Info:", log.Ldate|log.Ltime|log.Lshortfile)
-	Error = log.New(io.MultiWriter(os.Stderr, errFile, debugFile), "Error:", log.Ldate|log.Ltime|log.Lshortfile)
+	// info, warning, error 对应三个日志等级, 所有消息都会倒到 debug 中
+	Info = log.New(io.MultiWriter(infoFile, debugFile), "Debug:", log.LstdFlags|log.Lshortfile)
+	Warning = log.New(io.MultiWriter(warningFile, debugFile), "Warning:", log.LstdFlags|log.Lshortfile)
+	Debug = log.New(io.MultiWriter(debugFile), "Info:", log.LstdFlags|log.Lshortfile)
+	Error = log.New(io.MultiWriter(os.Stderr, errFile, debugFile), "Error:", log.LstdFlags|log.Lshortfile)
 }

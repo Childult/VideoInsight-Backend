@@ -6,6 +6,16 @@ const (
 	WorkSpace   = "/swc/code/"         // 工作目录, 用于访问其他文件(如python)
 	Location    = "/swc/resource"      // 资源存储位置
 	GRPCAddress = "192.168.2.80:50051" // gRPC 调用地址
+	MongoAddr   = "192.168.2.80:27018" // Mongodb 地址
+	MongoUser   = ""                   // Mongodb 账户
+	MongoPW     = ""                   // Mongodb 密码
+	RedisAddr   = "192.168.2.80:27018" // Redis 地址
+	RedisPW     = ""                   // Redis 密码
+)
+
+var (
+	MongoDB = "swcdb" // 数据库名称
+
 )
 
 // 任务状态值

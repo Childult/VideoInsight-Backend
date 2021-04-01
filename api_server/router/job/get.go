@@ -16,7 +16,7 @@ import (
 )
 
 // GetJob is used to process "/job" post requests, deviceid will be return
-func GetJob(c *gin.Context) {
+var GetJob = func(c *gin.Context) {
 	logger.Debug.Println("[GET] 开始")
 	var rt ReturnType
 	var err error
@@ -84,6 +84,6 @@ func GetJob(c *gin.Context) {
 		Message: util.GetJobStatus(newJob.Status),
 		Result:  ""}
 
-	logger.Debug.Printf("[GET] 返回状态%+v.\n", rt)
+	logger.Debug.Printf("[GET] 返回状态{%+v: %+v}.\n", rt.Status, rt.Message)
 	c.JSON(http.StatusOK, rt)
 }
