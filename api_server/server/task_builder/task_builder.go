@@ -43,6 +43,7 @@ func AddTask(url string, keyWords []string) {
 	r := &resource.Resource{URL: url}
 	arg := &TaskArgs{t: t, r: r}
 	ts.tasks <- arg
+	logger.Debug.Println("[任务调度] 收到任务", t)
 }
 
 // Scheduler 核心任务的调度器, 串行执行
@@ -105,6 +106,7 @@ func (tb *TaskScheduler) RetrieveResource(arg *TaskArgs) {
 
 // textAnalysis 调用文本分析, 成功时往 ch 发 1, 否则发 0
 func (tb *TaskScheduler) textAnalysis(ch chan int32, arg *TaskArgs) {
+	logger.Debug.Println("[任务调度] 文本分析开始")
 	err := abstext_builder.RequestTextAnalysis(arg.t.URL, arg.t.KeyWords, arg.r.VideoPath)
 	if err == nil {
 		at := abstext.NewAbsText(arg.t.URL, arg.t.KeyWords)
@@ -115,20 +117,24 @@ func (tb *TaskScheduler) textAnalysis(ch chan int32, arg *TaskArgs) {
 	} else {
 		ch <- 0
 	}
+	logger.Debug.Println("[任务调度] 文本分析结束", err)
 }
 
 // videoAnalysis 调用视频分析, 成功时往 ch 发 2, 否则发 0
 func (tb *TaskScheduler) videoAnalysis(ch chan int32, arg *TaskArgs) {
+	logger.Debug.Println("[任务调度] 视频分析开始")
 	err := absvideo_builder.RequestVideoAnalysis(arg.t.URL, arg.r.VideoPath, arg.r.Location)
 	if err == nil {
 		ch <- 2
 	} else {
 		ch <- 0
 	}
+	logger.Debug.Println("[任务调度] 视频分析结束", err)
 }
 
 // combine 合并结果
 func (tb *TaskScheduler) combine(ch chan int32, arg *TaskArgs) {
+	logger.Debug.Println("[任务调度] 等待文本分析和视频分析结束")
 	status1 := <-ch
 	status2 := <-ch
 	status := status1 | status2

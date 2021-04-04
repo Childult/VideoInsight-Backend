@@ -26,7 +26,7 @@ type VAArgs struct {
 type VAScheduler struct {
 	mu  sync.Mutex              // 创建任务时加锁, 保证任务唯一
 	m   map[string][]chan error // 当一个任务正在进行时, 有同样的任务进来, 就先保存起来, 以 url 为键
-	chs chan VAArgs             // 调度参数
+	chs chan *VAArgs            // 调度参数
 }
 
 var vas VAScheduler
@@ -37,16 +37,17 @@ var onceVAS sync.Once
 // path: 资源存储的位置
 // location: 结果存放的地址
 func RequestVideoAnalysis(url string, path string, location string) error {
+	logger.Debug.Println("[视频分析]] 收到任务", url, path, location)
 	// 调度器只会启动一次
 	onceVAS.Do(func() {
 		vas.m = make(map[string][]chan error)
-		vas.chs = make(chan VAArgs)
+		vas.chs = make(chan *VAArgs)
 		go vas.scheduler(vas.chs)
 	})
 
 	// 构建参数
 	back := make(chan error)
-	ch := VAArgs{url: url, path: path, location: location, back: back}
+	ch := &VAArgs{url: url, path: path, location: location, back: back}
 
 	// 把任务发送给调度器
 	vas.chs <- ch
@@ -56,7 +57,7 @@ func RequestVideoAnalysis(url string, path string, location string) error {
 }
 
 // scheduler 视频分析的调度器
-func (va *VAScheduler) scheduler(chs chan VAArgs) {
+func (va *VAScheduler) scheduler(chs chan *VAArgs) {
 	// 等待任务
 	for ch := range chs {
 		// 构建文本摘要对象

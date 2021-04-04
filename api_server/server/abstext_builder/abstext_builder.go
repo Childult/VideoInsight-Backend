@@ -26,7 +26,7 @@ type TAArgs struct {
 type TAScheduler struct {
 	mu  sync.Mutex              // 创建任务时加锁, 保证任务唯一
 	m   map[string][]chan error // 当一个任务正在进行时, 有同样的任务进来, 就先保存起来, 以文本摘要的哈希为键
-	chs chan TAArgs             // 调度参数
+	chs chan *TAArgs            // 调度参数
 }
 
 var tas TAScheduler
@@ -36,16 +36,17 @@ var onceTAS sync.Once
 // url, keyWords: 唯一确定一份文本分析, 将会保存在 abstext.AbsText 中
 // path: 资源存储的位置
 func RequestTextAnalysis(url string, keyWords []string, path string) error {
+	logger.Debug.Println("[文本分析]] 收到任务", url, keyWords, path)
 	// 调度器只会启动一次
 	onceTAS.Do(func() {
 		tas.m = make(map[string][]chan error)
-		tas.chs = make(chan TAArgs)
+		tas.chs = make(chan *TAArgs)
 		go tas.scheduler(tas.chs)
 	})
 
 	// 构建参数
 	back := make(chan error)
-	ch := TAArgs{url: url, keyWords: keyWords, path: path, back: back}
+	ch := &TAArgs{url: url, keyWords: keyWords, path: path, back: back}
 
 	// 把任务发送给调度器
 	tas.chs <- ch
@@ -55,7 +56,7 @@ func RequestTextAnalysis(url string, keyWords []string, path string) error {
 }
 
 // scheduler 文本分析的调度器
-func (ta *TAScheduler) scheduler(chs chan TAArgs) {
+func (ta *TAScheduler) scheduler(chs chan *TAArgs) {
 	// 等待任务
 	for ch := range chs {
 		// 构建文本摘要对象

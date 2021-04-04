@@ -25,7 +25,7 @@ type RSArgs struct {
 type ResourceScheduler struct {
 	mu  sync.Mutex              // 获取资源时加锁, 保证不会重复下载资源
 	m   map[string][]chan error // 当资源正在获取时, 有同样的资源进来, 就先保存起来, 以 URL 为键
-	chs chan RSArgs             // 调度时需要的参数
+	chs chan *RSArgs            // 调度时需要的参数
 }
 
 var rss ResourceScheduler
@@ -34,16 +34,17 @@ var onceRSS sync.Once
 // RequestResource 请求资源
 // url: 想要获取的资源链接
 func RequestResource(url string) error {
+	logger.Debug.Println("[资源下载] 收到任务", url)
 	// 调度器只会启动一次
 	onceRSS.Do(func() {
 		rss.m = make(map[string][]chan error)
-		rss.chs = make(chan RSArgs)
+		rss.chs = make(chan *RSArgs)
 		go rss.scheduler(rss.chs)
 	})
 
 	// 构建参数
 	back := make(chan error)
-	ch := RSArgs{url: url, back: back}
+	ch := &RSArgs{url: url, back: back}
 
 	// 把参数发送给调度器
 	rss.chs <- ch
@@ -53,7 +54,7 @@ func RequestResource(url string) error {
 }
 
 // scheduler 进行资源下载的调度, 串行执行
-func (ts *ResourceScheduler) scheduler(chs chan RSArgs) {
+func (ts *ResourceScheduler) scheduler(chs chan *RSArgs) {
 	// 等待任务
 	for ch := range chs {
 		// 构建资源对象

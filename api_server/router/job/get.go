@@ -58,8 +58,19 @@ var GetJob = func(c *gin.Context) {
 	newTask := task.NewTask(jpm.URL, jpm.KeyWords)
 	if redis.Exists(newTask) {
 		redis.FindOne(newTask)
-	} else {
+	} else if mongodb.Exists(newTask) {
 		mongodb.FindOne(newTask)
+	} else {
+		// 获取资源出错
+		logger.Error.Println("[GET] 获取资源出错")
+		rt = ReturnType{
+			Status:  jobNotExists,
+			Message: fmt.Sprintf("未找到`job_id=%s`的任务", j),
+			Result:  ""}
+		c.JSON(http.StatusBadRequest, rt)
+		redis.DeleteOne(j)
+		mongodb.DeleteOne(j)
+		return
 	}
 
 	if newTask.Status == util.TaskCompleted {
@@ -124,9 +135,9 @@ var GetJobID = func(c *gin.Context) {
 
 	newTask := task.NewTask(newJob.URL, newJob.KeyWords)
 	if redis.Exists(newTask) {
-		redis.FindOne(newJob)
+		redis.FindOne(newTask)
 	} else if mongodb.Exists(newTask) {
-		mongodb.FindOne(newJob)
+		mongodb.FindOne(newTask)
 	} else {
 		// 获取资源出错
 		logger.Error.Println("[GET] 获取资源出错")
