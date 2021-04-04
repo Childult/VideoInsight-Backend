@@ -66,7 +66,6 @@ func (tb *TaskScheduler) Scheduler(args chan *TaskArgs) {
 		default:
 			logger.Error.Println("发生错误:", t)
 		}
-		// r, err := ts.GetResource(t.URL)
 	}
 }
 
@@ -96,7 +95,11 @@ func (tb *TaskScheduler) RetrieveResource(arg *TaskArgs) {
 	err := resource_builder.RequestResource(arg.t.URL)
 	if err == nil {
 		arg.t.Status = util.TaskDownloadDone
-		redis.FindOne(arg.r)
+		if redis.Exists(arg.r) {
+			redis.FindOne(arg.r)
+		} else {
+			mongodb.FindOne(arg.r)
+		}
 	} else {
 		arg.t.Status = util.TaskErrRetrieveFail
 	}
@@ -110,7 +113,11 @@ func (tb *TaskScheduler) textAnalysis(ch chan int32, arg *TaskArgs) {
 	err := abstext_builder.RequestTextAnalysis(arg.t.URL, arg.t.KeyWords, arg.r.VideoPath)
 	if err == nil {
 		at := abstext.NewAbsText(arg.t.URL, arg.t.KeyWords)
-		redis.FindOne(at)
+		if redis.Exists(at) {
+			redis.FindOne(at)
+		} else {
+			mongodb.FindOne(at)
+		}
 		arg.t.TextHash = at.Hash
 		redis.UpdataOne(arg.t)
 		ch <- 1
