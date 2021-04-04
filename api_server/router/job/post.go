@@ -39,7 +39,7 @@ var PostJob = func(c *gin.Context) {
 	if err != nil {
 		logger.Error.Printf("[POST Job] 数据解析失败: %+v.\n", err)
 		rt = ReturnType{
-			Status:  -1,
+			Status:  jsonErr,
 			Message: err.Error(),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)

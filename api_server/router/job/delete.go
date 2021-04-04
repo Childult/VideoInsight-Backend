@@ -2,7 +2,11 @@ package job_router
 
 import (
 	"net/http"
+	"swc/data/abstext"
+	"swc/data/absvideo"
 	"swc/data/job"
+	"swc/data/resource"
+	"swc/data/task"
 	"swc/dbs/mongodb"
 	"swc/dbs/redis"
 	"swc/logger"
@@ -22,7 +26,7 @@ var DeleteJob = func(c *gin.Context) {
 	if err != nil {
 		logger.Error.Printf("[POST] 数据解析失败: %+v.\n", err)
 		rt = ReturnType{
-			Status:  -1,
+			Status:  jsonErr,
 			Message: err.Error(),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)
@@ -35,13 +39,14 @@ var DeleteJob = func(c *gin.Context) {
 	if redis.Exists(newJob) || mongodb.Exists(newJob) {
 		redis.DeleteOne(newJob)
 		mongodb.DeleteOne(newJob)
+		recursiveDelete(newJob)
 		rt = ReturnType{
 			Status:  0,
 			Message: "删除成功",
 			Result:  ""}
 	} else {
 		rt = ReturnType{
-			Status:  -2,
+			Status:  jobNotExists,
 			Message: "资源不存在",
 			Result:  ""}
 	}
@@ -49,4 +54,18 @@ var DeleteJob = func(c *gin.Context) {
 	// 返回
 	logger.Debug.Println("[DELETE] 结束")
 	c.JSON(http.StatusBadRequest, rt)
+}
+
+func recursiveDelete(j *job.Job) {
+	t := task.NewTask(j.URL, j.KeyWords)
+	redis.DeleteOne(t)
+
+	r := &resource.Resource{URL: j.URL}
+	redis.DeleteOne(r)
+
+	at := abstext.NewAbsText(j.URL, j.KeyWords)
+	redis.DeleteOne(at)
+
+	av := &absvideo.AbsVideo{URL: j.URL}
+	redis.DeleteOne(av)
 }

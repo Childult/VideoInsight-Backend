@@ -18,6 +18,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	jsonErr      = -iota - 1 // JSON 格式错误
+	jobNotExists             // 任务不存在
+)
+
 // GetJob is used to process "/job" post requests, deviceid will be return
 var GetJob = func(c *gin.Context) {
 	logger.Debug.Println("[GET] 开始")
@@ -30,7 +35,7 @@ var GetJob = func(c *gin.Context) {
 	if err != nil {
 		logger.Error.Printf("[POST] 数据解析失败: %+v.\n", err)
 		rt = ReturnType{
-			Status:  -1,
+			Status:  jsonErr,
 			Message: err.Error(),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)
@@ -42,7 +47,7 @@ var GetJob = func(c *gin.Context) {
 		// 获取资源出错
 		logger.Warning.Println("[GET] 查询了不存在的任务")
 		rt = ReturnType{
-			Status:  -3,
+			Status:  jobNotExists,
 			Message: fmt.Sprintf("未找到`job_id=%s`的任务", j.JobID),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)
@@ -56,6 +61,7 @@ var GetJob = func(c *gin.Context) {
 	} else {
 		mongodb.FindOne(newTask)
 	}
+
 	if newTask.Status == util.TaskCompleted {
 		// 任务已完成
 		r := resource.Resource{URL: newTask.URL}
@@ -76,7 +82,7 @@ var GetJob = func(c *gin.Context) {
 
 		rt = ReturnType{
 			Status:  int(newTask.Status),
-			Message: util.GetJobStatus(newTask.Status),
+			Message: util.GetTaskStatus(newTask.Status),
 			Result: gin.H{
 				"text":     at.Abstract,
 				"pictures": pictures,
@@ -88,7 +94,85 @@ var GetJob = func(c *gin.Context) {
 	// 任务已经存在, 且未完成
 	rt = ReturnType{
 		Status:  int(newTask.Status),
-		Message: util.GetJobStatus(newTask.Status),
+		Message: util.GetTaskStatus(newTask.Status),
+		Result:  ""}
+
+	logger.Debug.Printf("[GET] 返回状态{%+v: %+v}.\n", rt.Status, rt.Message)
+	c.JSON(http.StatusOK, rt)
+}
+
+var GetJobID = func(c *gin.Context) {
+	logger.Debug.Println("[GET] 开始")
+	var rt ReturnType
+	// 获取数据
+	jobID := c.Param("job_id")
+	newJob := &job.Job{JobID: jobID}
+	if redis.Exists(newJob) {
+		redis.FindOne(newJob)
+	} else if mongodb.Exists(newJob) {
+		mongodb.FindOne(newJob)
+	} else {
+		// 获取资源出错
+		logger.Error.Println("[GET] 获取资源出错")
+		rt = ReturnType{
+			Status:  jobNotExists,
+			Message: fmt.Sprintf("未找到`job_id=%s`的任务", jobID),
+			Result:  ""}
+		c.JSON(http.StatusBadRequest, rt)
+		return
+	}
+
+	newTask := task.NewTask(newJob.URL, newJob.KeyWords)
+	if redis.Exists(newTask) {
+		redis.FindOne(newJob)
+	} else if mongodb.Exists(newTask) {
+		mongodb.FindOne(newJob)
+	} else {
+		// 获取资源出错
+		logger.Error.Println("[GET] 获取资源出错")
+		rt = ReturnType{
+			Status:  jobNotExists,
+			Message: fmt.Sprintf("未找到`job_id=%s`的任务", jobID),
+			Result:  ""}
+		c.JSON(http.StatusBadRequest, rt)
+		redis.DeleteOne(newJob)
+		mongodb.DeleteOne(newJob)
+		return
+	}
+
+	if newTask.Status == util.TaskCompleted {
+		// 任务已完成
+		r := resource.Resource{URL: newTask.URL}
+		mongodb.FindOne(&r)
+
+		at := abstext.NewAbsText(newTask.URL, newTask.KeyWords)
+		mongodb.FindOne(at)
+
+		av := absvideo.AbsVideo{URL: newTask.URL}
+		mongodb.FindOne(&av)
+
+		prefix := r.Location
+		pictures := make(map[string]string)
+
+		for _, filename := range av.Abstract {
+			pictures[filename] = ImagesToBase64(prefix + filename)
+		}
+
+		rt = ReturnType{
+			Status:  int(newTask.Status),
+			Message: util.GetTaskStatus(newTask.Status),
+			Result: gin.H{
+				"text":     at.Abstract,
+				"pictures": pictures,
+			}}
+		c.JSON(http.StatusOK, rt)
+		return
+	}
+
+	// 任务已经存在, 且未完成
+	rt = ReturnType{
+		Status:  int(newTask.Status),
+		Message: util.GetTaskStatus(newTask.Status),
 		Result:  ""}
 
 	logger.Debug.Printf("[GET] 返回状态{%+v: %+v}.\n", rt.Status, rt.Message)

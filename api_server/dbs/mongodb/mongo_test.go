@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"swc/data/task"
 	"swc/util"
 	"sync"
 	"testing"
@@ -16,7 +17,7 @@ import (
 
 func init() {
 	InitMongodb("192.168.2.80:27018", "", "")
-	util.MongoDB = "test"
+	// util.MongoDB = "test"
 }
 
 func TestShowDatabases(t *testing.T) {
@@ -97,7 +98,7 @@ func (r *fakeData) Coll() string {
 
 func TestFindAll(t *testing.T) {
 	// 要查看的数据类型
-	var d *fakeData = new(fakeData)
+	var d = task.Task{}
 
 	// 查看所有数据
 	client := pool.Client
@@ -108,16 +109,18 @@ func TestFindAll(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	coll := client.Database(util.MongoDB).Collection(d.Coll())
+	coll := client.Database(util.MongoDB).Collection("task")
 	cursor, err := coll.Find(ctx, bson.M{})
 	if err != nil {
 		t.Error(err)
 	}
 	for cursor.Next(ctx) {
-		if err = cursor.Decode(d); err != nil {
+		if err = cursor.Decode(&d); err != nil {
 			t.Error(err)
 		}
 		fmt.Printf("%+v\n", d)
+		d.Status = 3
+		UpdataOne(&d)
 	}
 }
 
