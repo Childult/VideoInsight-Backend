@@ -49,5 +49,4 @@ var DeleteJob = func(c *gin.Context) {
 	// 返回
 	logger.Debug.Println("[DELETE] 结束")
 	c.JSON(http.StatusBadRequest, rt)
-
 }

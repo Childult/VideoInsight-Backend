@@ -1,8 +1,8 @@
 package job_router
 
 import (
+	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"swc/data/abstext"
@@ -51,8 +51,12 @@ var GetJob = func(c *gin.Context) {
 
 	// 查找数据
 	newTask := task.NewTask(jpm.URL, jpm.KeyWords)
-	err = mongodb.FindOne(newTask)
-	if err == nil {
+	if redis.Exists(newTask) {
+		redis.FindOne(newTask)
+	} else {
+		mongodb.FindOne(newTask)
+	}
+	if newTask.Status == util.TaskCompleted {
 		// 任务已完成
 		r := resource.Resource{URL: newTask.URL}
 		mongodb.FindOne(&r)
@@ -67,9 +71,7 @@ var GetJob = func(c *gin.Context) {
 		pictures := make(map[string]string)
 
 		for _, filename := range av.Abstract {
-			file, _ := os.Open(prefix + filename)
-			content, _ := ioutil.ReadAll(file)
-			pictures[filename] = string(content)
+			pictures[filename] = ImagesToBase64(prefix + filename)
 		}
 
 		rt = ReturnType{
@@ -83,18 +85,7 @@ var GetJob = func(c *gin.Context) {
 		return
 	}
 
-	if !redis.Exists(newTask) {
-		// 获取资源出错
-		logger.Warning.Println("[GET] 查询了不存在的任务")
-		rt = ReturnType{
-			Status:  -3,
-			Message: fmt.Sprintf("未找到`job_id=%s`的任务", newTask.TaskID),
-			Result:  ""}
-		c.JSON(http.StatusBadRequest, rt)
-		return
-	}
 	// 任务已经存在, 且未完成
-	redis.FindOne(newTask)
 	rt = ReturnType{
 		Status:  int(newTask.Status),
 		Message: util.GetJobStatus(newTask.Status),
@@ -102,4 +93,16 @@ var GetJob = func(c *gin.Context) {
 
 	logger.Debug.Printf("[GET] 返回状态{%+v: %+v}.\n", rt.Status, rt.Message)
 	c.JSON(http.StatusOK, rt)
+}
+
+func ImagesToBase64(str_images string) string {
+	//读原图片
+	ff, _ := os.Open(str_images)
+	fileInfo, _ := ff.Stat()
+	defer ff.Close()
+	sourcebuffer := make([]byte, fileInfo.Size())
+	n, _ := ff.Read(sourcebuffer)
+	//base64压缩
+	sourcestring := base64.StdEncoding.EncodeToString(sourcebuffer[:n])
+	return sourcestring
 }
