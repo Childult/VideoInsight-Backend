@@ -6,7 +6,7 @@ import (
 	"swc/dbs/mongodb"
 	"swc/dbs/redis"
 	"swc/logger"
-	"swc/server"
+	"swc/server/task_builder"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -64,7 +64,7 @@ var PostJob = func(c *gin.Context) {
 		go mongodb.InsertOne(newJob)
 
 		// 开启任务
-		go server.StartJob(newJob)
+		go task_builder.AddTask(newJob.URL, newJob.KeyWords)
 
 		// 返回 JobID
 		rt = ReturnType{

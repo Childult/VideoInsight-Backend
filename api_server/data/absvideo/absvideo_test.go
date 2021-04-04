@@ -125,12 +125,12 @@ func TestRedis(t *testing.T) {
 func TestMongodbCRUD(t *testing.T) {
 	// 在 mongodb 中的插入, 查询, 删除测试
 	tests := []*AbsVideo{
-		{"网址1", []string{"摘要1", "摘要2"}},
-		{"网址2", []string{"摘要1", ""}},
-		{"网址3", []string{"", ""}},
-		{"网址4", []string{""}},
-		{"网址5", []string{}},
-		{"网址6", nil},
+		{"网址1", []string{"摘要1", "摘要2"}, 0},
+		{"网址2", []string{"摘要1", ""}, 0},
+		{"网址3", []string{"", ""}, 0},
+		{"网址4", []string{""}, 0},
+		{"网址5", []string{}, 0},
+		{"网址6", nil, 0},
 	}
 	var err error
 	newAV := &AbsVideo{}
@@ -155,12 +155,12 @@ func TestMongodbCRUD(t *testing.T) {
 func TestRedisCRUD(t *testing.T) {
 	// 在 mongodb 中的插入, 查询, 删除测试
 	tests := []*AbsVideo{
-		{"网址1", []string{"摘要1", "摘要2"}},
-		{"网址2", []string{"摘要1", ""}},
-		{"网址3", []string{"", ""}},
-		{"网址4", []string{""}},
-		{"网址5", []string{}},
-		{"网址6", nil},
+		{"网址1", []string{"摘要1", "摘要2"}, 0},
+		{"网址2", []string{"摘要1", ""}, 0},
+		{"网址3", []string{"", ""}, 0},
+		{"网址4", []string{""}, 0},
+		{"网址5", []string{}, 0},
+		{"网址6", nil, 0},
 	}
 	var err error
 

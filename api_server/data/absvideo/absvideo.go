@@ -8,6 +8,7 @@ const (
 type AbsVideo struct {
 	URL      string   `bson:"url"                 json:"url"`      // 对应链接地址
 	Abstract []string `bson:"abstract"            json:"abstract"` // 视频摘要地址, 每一项是一张图片
+	Status   int32    `bson:"status"             json:"status"`    // 当前状态
 }
 
 // Tag 返回主键标签

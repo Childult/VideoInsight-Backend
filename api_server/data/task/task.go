@@ -40,7 +40,7 @@ func NewTask(url string, keyWords []string) (j *Task) {
 		TaskID:   getTaskID(url, keyWords),
 		URL:      url,
 		KeyWords: keyWords,
-		Status:   util.JobStart,
+		Status:   util.TaskStart,
 	}
 	if len(keyWords) == 0 {
 		j.KeyWords = nil

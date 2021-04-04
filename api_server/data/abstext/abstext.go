@@ -17,6 +17,7 @@ type AbsText struct {
 	KeyWords []string `bson:"key_words"           json:"key_words,omitempty"` // 关键字
 	Text     string   `bson:"text"                json:"text"`                // 语音识别
 	Abstract []string `bson:"abstract"            json:"abstract"`            // 摘要
+	Status   int32    `bson:"status"             json:"status"`               // 当前状态
 }
 
 // Tag 返回主键标签

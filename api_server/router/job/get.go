@@ -7,6 +7,7 @@ import (
 	"os"
 	"swc/data/abstext"
 	"swc/data/absvideo"
+	"swc/data/job"
 	"swc/data/resource"
 	"swc/data/task"
 	"swc/dbs/mongodb"
@@ -36,18 +37,30 @@ var GetJob = func(c *gin.Context) {
 		return
 	}
 
+	j := job.NewJob(jpm.DeviceID, jpm.URL, jpm.KeyWords)
+	if !redis.Exists(j) && !mongodb.Exists(j) {
+		// 获取资源出错
+		logger.Warning.Println("[GET] 查询了不存在的任务")
+		rt = ReturnType{
+			Status:  -3,
+			Message: fmt.Sprintf("未找到`job_id=%s`的任务", j.JobID),
+			Result:  ""}
+		c.JSON(http.StatusBadRequest, rt)
+		return
+	}
+
 	// 查找数据
-	newJob := task.NewTask(jpm.URL, jpm.KeyWords)
-	err = mongodb.FindOne(newJob)
+	newTask := task.NewTask(jpm.URL, jpm.KeyWords)
+	err = mongodb.FindOne(newTask)
 	if err == nil {
 		// 任务已完成
-		r := resource.Resource{URL: newJob.URL}
+		r := resource.Resource{URL: newTask.URL}
 		mongodb.FindOne(&r)
 
-		at := abstext.NewAbsText(newJob.URL, newJob.KeyWords)
+		at := abstext.NewAbsText(newTask.URL, newTask.KeyWords)
 		mongodb.FindOne(at)
 
-		av := absvideo.AbsVideo{URL: newJob.URL}
+		av := absvideo.AbsVideo{URL: newTask.URL}
 		mongodb.FindOne(&av)
 
 		prefix := r.Location
@@ -60,8 +73,8 @@ var GetJob = func(c *gin.Context) {
 		}
 
 		rt = ReturnType{
-			Status:  int(newJob.Status),
-			Message: util.GetJobStatus(newJob.Status),
+			Status:  int(newTask.Status),
+			Message: util.GetJobStatus(newTask.Status),
 			Result: gin.H{
 				"text":     at.Abstract,
 				"pictures": pictures,
@@ -70,21 +83,21 @@ var GetJob = func(c *gin.Context) {
 		return
 	}
 
-	if !redis.Exists(newJob) {
+	if !redis.Exists(newTask) {
 		// 获取资源出错
 		logger.Warning.Println("[GET] 查询了不存在的任务")
 		rt = ReturnType{
 			Status:  -3,
-			Message: fmt.Sprintf("未找到`job_id=%s`的任务", newJob.TaskID),
+			Message: fmt.Sprintf("未找到`job_id=%s`的任务", newTask.TaskID),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)
 		return
 	}
 	// 任务已经存在, 且未完成
-	redis.FindOne(newJob)
+	redis.FindOne(newTask)
 	rt = ReturnType{
-		Status:  int(newJob.Status),
-		Message: util.GetJobStatus(newJob.Status),
+		Status:  int(newTask.Status),
+		Message: util.GetJobStatus(newTask.Status),
 		Result:  ""}
 
 	logger.Debug.Printf("[GET] 返回状态{%+v: %+v}.\n", rt.Status, rt.Message)

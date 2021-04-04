@@ -20,26 +20,15 @@ var (
 
 // 任务状态值
 const (
-	JobStart                       = iota // 创建资源, 写入数据库
-	JobResourceExisted                    // 资源已存在
-	JobToTextExtract                      // 准备提取文本摘要
-	JobToDownloadMedia                    // 准备下载资源
-	JobToExtractAudio                     // 准备提取音频
-	JobAudioExtractDone                   // 音频提取成功
-	JobTextAbstractExtractionDone         // 文本摘要提取完成
-	JobVideoAbstractExtractionDone        // 视频摘要提取完成
-	JobCompleted                          // 完成
+	TaskStart        = iota // 接收到一个任务 创建资源, 写入数据库
+	TaskCreated             // 任务创建
+	TaskDownloadDone        // 资源下载完成
+	TaskCompleted           // 完成
 
-	JobErrFailedToFindResource              // 从数据库中读取时发生错误
-	JobErrDownloadFailed                    // 资源下载失败
-	JobErrAudioExtractFailed                // 音频提取失败
-	JobErrTextAnalysisFailed                // 文本分析失败
-	JobErrTextAnalysisReadJSONFailed        // 从文本分析结果中获取JSON失败
-	JobErrVideoAnalysisFailed               // 视频分析失败
-	JobErrVideoAnalysisReadJSONFailed       // 视频分析JSON读取失败
-	JobErrVideoAnalysisGRPCConnectFailed    // 视频分析 gRPC 连接失败
-	JobErrVideoAnalysisGRPCallFailed        // 视频分析 gRPC 调用失败
-	JobErrVideoAnalysisGRPCallJobIDNotMatch // 视频分析 gRPC 调用 JobID 不匹配
+	TaskErrRetrieveFail        // 资源获取出错
+	TaskErrTextAnalysisFailed  // 文本分析失败
+	TaskErrVideoAnalysisFailed // 视频分析失败
+	TaskErrTextAndVideoFail    // 文本分析和视频分析都失败
 )
 
 // 资源状态值
@@ -52,4 +41,20 @@ const (
 
 	ResourceErrDownloadFailed     // 资源下载失败
 	ResourceErrAudioExtractFailed // 音频提取失败
+)
+
+const (
+	AbsTextStart                         = iota // 创建资源
+	AbsTextComplete                             // 文本分析完成
+	AbsTextErrPythonFailed                      // 无返回结果, python 调用出错
+	AbsTextErrTextAnalysisReadJSONFailed        // 从文本分析结果中获取JSON失败
+	AbsTextErrTextAnalysisFailed                // 文本分析失败
+)
+
+const (
+	AbsVideoStart                   = iota // 创建视频摘要资源
+	AbsVideoComplete                       // 视频分析完成
+	AbsVideoErrGRPCConnectFailed           // 视频分析 gRPC 连接失败
+	AbsVideoErrGRPCallFailed               // 视频分析 gRPC 调用失败
+	AbsVideoErrGRPCallJobIDNotMatch        // 视频分析 gRPC 调用 JobID 不匹配
 )
