@@ -8,12 +8,12 @@
 - `video_analysis/`: 视频分析模块
 - `video_getter/`: 视频获取模块
 
-## 使用Docker运行
+## 启动与终止
 
 ```bash
-# 启动容器
-docker-compose -p VideoInsight up -d
+# 启动后端程序
+sh start.sh
 
-# 停止容器
-docker-compose -p VideoInsight down
+# 终止后端程序
+sh stop.sh
 ```
