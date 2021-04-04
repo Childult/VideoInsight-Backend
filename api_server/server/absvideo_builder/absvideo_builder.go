@@ -17,7 +17,7 @@ import (
 // VAArgs 视频分析需要输入的参数
 type VAArgs struct {
 	url      string     // 要获取的资源链接
-	path     string     // 资源存储的地址
+	fpath    string     // 资源存储的地址
 	location string     // 结果存放的地址
 	back     chan error // 用于通知结果的管道
 }
@@ -34,10 +34,10 @@ var onceVAS sync.Once
 
 // RequestVideoAnalysis 请求对资源进行文本分析
 // url: 唯一确定一份视频分析, 将会保存在 absvideo.AbsVideo 中
-// path: 资源存储的位置
+// fpath: 资源存储的位置
 // location: 结果存放的地址
-func RequestVideoAnalysis(url string, path string, location string) error {
-	logger.Debug.Println("[视频分析]] 收到任务", url, path, location)
+func RequestVideoAnalysis(url string, fpath string, location string) error {
+	logger.Debug.Println("[视频分析]] 收到任务", url, fpath, location)
 	// 调度器只会启动一次
 	onceVAS.Do(func() {
 		vas.m = make(map[string][]chan error)
@@ -47,7 +47,7 @@ func RequestVideoAnalysis(url string, path string, location string) error {
 
 	// 构建参数
 	back := make(chan error)
-	ch := &VAArgs{url: url, path: path, location: location, back: back}
+	ch := &VAArgs{url: url, fpath: fpath, location: location, back: back}
 
 	// 把任务发送给调度器
 	vas.chs <- ch
@@ -95,7 +95,7 @@ func (va *VAScheduler) scheduler(chs chan *VAArgs) {
 			va.m[url] = append(va.m[url], ch.back)
 			redis.InsertOne(av)
 			va.mu.Unlock()
-			go va.videoAnalysis(av, ch.path, ch.location)
+			go va.videoAnalysis(av, ch.fpath, ch.location)
 		}
 	}
 }
@@ -109,11 +109,11 @@ type videoAbstract struct {
 var tempJobID = "123456"
 
 // videoAnalysis 视频分析
-func (va *VAScheduler) videoAnalysis(av *absvideo.AbsVideo, path string, location string) {
+func (va *VAScheduler) videoAnalysis(av *absvideo.AbsVideo, fpath string, location string) {
 	// 设置 gRPC 参数
 	address := util.GRPCAddress // gRPC 地址
 	jobID := tempJobID          // 任务id, 这里先随便写一个
-	videoFile := path           // 视频文件路径
+	videoFile := fpath          // 视频文件路径
 	savaPath := location        // 结果存储路径
 
 	// 连接 gRPC 服务器

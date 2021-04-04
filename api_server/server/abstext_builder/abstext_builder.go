@@ -18,7 +18,7 @@ import (
 type TAArgs struct {
 	url      string     // 要获取的资源链接
 	keyWords []string   // 关键词
-	path     string     // 资源存储的地址
+	fpath    string     // 资源存储的地址
 	back     chan error // 用于通知结果的管道
 }
 
@@ -34,9 +34,9 @@ var onceTAS sync.Once
 
 // RequestTextAnalysis 请求对资源进行文本分析
 // url, keyWords: 唯一确定一份文本分析, 将会保存在 abstext.AbsText 中
-// path: 资源存储的位置
-func RequestTextAnalysis(url string, keyWords []string, path string) error {
-	logger.Debug.Println("[文本分析]] 收到任务", url, keyWords, path)
+// fpath: 资源存储的位置
+func RequestTextAnalysis(url string, keyWords []string, fpath string) error {
+	logger.Debug.Println("[文本分析]] 收到任务", url, keyWords, fpath)
 	// 调度器只会启动一次
 	onceTAS.Do(func() {
 		tas.m = make(map[string][]chan error)
@@ -46,7 +46,7 @@ func RequestTextAnalysis(url string, keyWords []string, path string) error {
 
 	// 构建参数
 	back := make(chan error)
-	ch := &TAArgs{url: url, keyWords: keyWords, path: path, back: back}
+	ch := &TAArgs{url: url, keyWords: keyWords, fpath: fpath, back: back}
 
 	// 把任务发送给调度器
 	tas.chs <- ch
@@ -93,7 +93,7 @@ func (ta *TAScheduler) scheduler(chs chan *TAArgs) {
 			ta.m[at.Hash] = append(ta.m[at.Hash], ch.back)
 			redis.InsertOne(at)
 			ta.mu.Unlock()
-			go ta.textAnalysis(at, ch.path, ch.back)
+			go ta.textAnalysis(at, ch.fpath, ch.back)
 		}
 	}
 }
@@ -106,14 +106,14 @@ type textAbstract struct {
 }
 
 // textAnalysis 文本分析
-func (ta *TAScheduler) textAnalysis(at *abstext.AbsText, path string, back chan error) {
+func (ta *TAScheduler) textAnalysis(at *abstext.AbsText, fpath string, back chan error) {
 	// 构建文本分析调用对象
 	python := python.PyWorker{
 		PackagePath: filepath.Join(util.WorkSpace, "text_analysis"), // python 文件所在的包
 		FileName:    "api",                                          // 文件名
 		MethodName:  "generate_abstract_from_audio",                 // 调用函数名
 		Args: []string{ // 调用实参
-			python.SetArg(path),
+			python.SetArg(fpath),
 		},
 	}
 

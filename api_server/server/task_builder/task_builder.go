@@ -1,6 +1,7 @@
 package task_builder
 
 import (
+	"path/filepath"
 	"swc/data/abstext"
 	"swc/data/resource"
 	"swc/data/task"
@@ -88,6 +89,7 @@ func (tb *TaskScheduler) createTask(arg *TaskArgs) {
 		newArg := &TaskArgs{t: newTask, r: newRS}
 		tb.tasks <- newArg
 	}
+	logger.Debug.Println("[任务调度] 收到任务", arg.t)
 }
 
 // RetrieveResource 获取资源
@@ -110,7 +112,7 @@ func (tb *TaskScheduler) RetrieveResource(arg *TaskArgs) {
 // textAnalysis 调用文本分析, 成功时往 ch 发 1, 否则发 0
 func (tb *TaskScheduler) textAnalysis(ch chan int32, arg *TaskArgs) {
 	logger.Debug.Println("[任务调度] 文本分析开始")
-	err := abstext_builder.RequestTextAnalysis(arg.t.URL, arg.t.KeyWords, arg.r.VideoPath)
+	err := abstext_builder.RequestTextAnalysis(arg.t.URL, arg.t.KeyWords, filepath.Join(arg.r.Location, arg.r.AudioPath))
 	if err == nil {
 		at := abstext.NewAbsText(arg.t.URL, arg.t.KeyWords)
 		if redis.Exists(at) {
@@ -130,7 +132,7 @@ func (tb *TaskScheduler) textAnalysis(ch chan int32, arg *TaskArgs) {
 // videoAnalysis 调用视频分析, 成功时往 ch 发 2, 否则发 0
 func (tb *TaskScheduler) videoAnalysis(ch chan int32, arg *TaskArgs) {
 	logger.Debug.Println("[任务调度] 视频分析开始")
-	err := absvideo_builder.RequestVideoAnalysis(arg.t.URL, arg.r.VideoPath, arg.r.Location)
+	err := absvideo_builder.RequestVideoAnalysis(arg.t.URL, filepath.Join(arg.r.Location, arg.r.VideoPath), arg.r.Location)
 	if err == nil {
 		ch <- 2
 	} else {
