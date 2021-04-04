@@ -111,6 +111,7 @@ def video_summarize(file: str, save_dir: str) -> str:
 
 if __name__ == '__main__':
     init_logger()
-    print(generate_abstract_from_video(
-        '/swc/resource/1616397097/MTYxNjM5NzEzNy4yNDI3MjhodHRwczovL3d3dy5iaWxpYmlsaS5jb20vdmlkZW8vQlYxQnY0MTFrNzQ1.mp4',
-        '/swc/resource/tests/'))
+    # print(generate_abstract_from_video(
+    #     '/swc/resource/1616397097/MTYxNjM5NzEzNy4yNDI3MjhodHRwczovL3d3dy5iaWxpYmlsaS5jb20vdmlkZW8vQlYxQnY0MTFrNzQ1.mp4',
+    #     '/swc/resource/tests/'))
+    print(extract_key_frame('/swc/resource/1617010399/MTYxNzAxMDQxMC4yNDM2OTJodHRwczovL3d3dy5iaWxpYmlsaS5jb20vdmlkZW8vQlYxM1o0eTFHN1Ax.mp4', '/swc/resource/tests/', 8))
