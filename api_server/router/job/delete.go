@@ -2,13 +2,8 @@ package job_router
 
 import (
 	"net/http"
-	"swc/data/abstext"
-	"swc/data/absvideo"
 	"swc/data/job"
-	"swc/data/resource"
-	"swc/data/task"
 	"swc/dbs/mongodb"
-	"swc/dbs/redis"
 	"swc/logger"
 
 	"github.com/gin-gonic/gin"
@@ -36,10 +31,8 @@ var DeleteJob = func(c *gin.Context) {
 	newJob := job.NewJob(jpm.DeviceID, jpm.URL, jpm.KeyWords)
 
 	// 删除数据库
-	if redis.Exists(newJob) || mongodb.Exists(newJob) {
-		redis.DeleteOne(newJob)
+	if mongodb.Exists(newJob) {
 		mongodb.DeleteOne(newJob)
-		recursiveDelete(newJob)
 		rt = ReturnType{
 			Status:  0,
 			Message: "删除成功",
@@ -54,18 +47,4 @@ var DeleteJob = func(c *gin.Context) {
 	// 返回
 	logger.Debug.Println("[DELETE] 结束")
 	c.JSON(http.StatusBadRequest, rt)
-}
-
-func recursiveDelete(j *job.Job) {
-	t := task.NewTask(j.URL, j.KeyWords)
-	redis.DeleteOne(t)
-
-	r := &resource.Resource{URL: j.URL}
-	redis.DeleteOne(r)
-
-	at := abstext.NewAbsText(j.URL, j.KeyWords)
-	redis.DeleteOne(at)
-
-	av := &absvideo.AbsVideo{URL: j.URL}
-	redis.DeleteOne(av)
 }

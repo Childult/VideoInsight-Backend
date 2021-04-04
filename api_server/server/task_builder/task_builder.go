@@ -6,7 +6,6 @@ import (
 	"swc/data/resource"
 	"swc/data/task"
 	"swc/dbs/mongodb"
-	"swc/dbs/redis"
 	"swc/logger"
 	"swc/server/abstext_builder"
 	"swc/server/absvideo_builder"
@@ -74,12 +73,12 @@ func (tb *TaskScheduler) Scheduler(args chan *TaskArgs) {
 func (tb *TaskScheduler) createTask(arg *TaskArgs) {
 	tb.mu.Lock()
 	defer tb.mu.Unlock()
-	if redis.Exists(arg.t) || mongodb.Exists(arg.t) { // 任务已经存在, 直接忽略
+	if mongodb.Exists(arg.t) { // 任务已经存在, 直接忽略
 		return
 	}
 	// 不存在则正式开始任务
 	arg.t.Status = util.TaskCreated
-	redis.InsertOne(arg.t)
+	mongodb.InsertOne(arg.t)
 	tb.tasks <- arg
 
 	// 关键词不为空时, 会发起两个任务
@@ -97,15 +96,11 @@ func (tb *TaskScheduler) RetrieveResource(arg *TaskArgs) {
 	err := resource_builder.RequestResource(arg.t.URL)
 	if err == nil {
 		arg.t.Status = util.TaskDownloadDone
-		if redis.Exists(arg.r) {
-			redis.FindOne(arg.r)
-		} else {
-			mongodb.FindOne(arg.r)
-		}
+		mongodb.FindOne(arg.r)
 	} else {
 		arg.t.Status = util.TaskErrRetrieveFail
 	}
-	redis.UpdataOne(arg.t)
+	mongodb.UpdataOne(arg.t)
 	tb.tasks <- arg
 }
 
@@ -115,13 +110,9 @@ func (tb *TaskScheduler) textAnalysis(ch chan int32, arg *TaskArgs) {
 	err := abstext_builder.RequestTextAnalysis(arg.t.URL, arg.t.KeyWords, filepath.Join(arg.r.Location, arg.r.AudioPath))
 	if err == nil {
 		at := abstext.NewAbsText(arg.t.URL, arg.t.KeyWords)
-		if redis.Exists(at) {
-			redis.FindOne(at)
-		} else {
-			mongodb.FindOne(at)
-		}
+		mongodb.FindOne(at)
 		arg.t.TextHash = at.Hash
-		redis.UpdataOne(arg.t)
+		mongodb.UpdataOne(arg.t)
 		ch <- 1
 	} else {
 		ch <- 0
@@ -156,8 +147,7 @@ func (tb *TaskScheduler) combine(ch chan int32, arg *TaskArgs) {
 		arg.t.Status = util.TaskErrTextAnalysisFailed
 	case 3: // 文本分析和视频分析都成功
 		arg.t.Status = util.TaskCompleted
-		mongodb.InsertOne(arg.t)
 	}
-	redis.UpdataOne(arg.t)
+	mongodb.UpdataOne(arg.t)
 	tb.tasks <- arg
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"swc/data/absvideo"
 	"swc/dbs/mongodb"
-	"swc/dbs/redis"
 	"swc/logger"
 	pb "swc/server/network"
 	"swc/util"
@@ -67,10 +66,10 @@ func (va *VAScheduler) scheduler(chs chan *VAArgs) {
 		// 查看是否有已经完成或正在进行的任务
 		// 加锁, 保证对管道(m)的访问时串行的
 		va.mu.Lock()
-		// 先从 redis 中找, redis 中的数据会过期
-		if redis.Exists(av) {
+		// 先从数据库中找
+		if mongodb.Exists(av) {
 			// 如果已经存在, 取回视频摘要
-			redis.InsertOne(av)
+			mongodb.FindOne(av)
 
 			// 判断视频摘要状态
 			if av.Status == util.AbsTextComplete {
@@ -86,14 +85,10 @@ func (va *VAScheduler) scheduler(chs chan *VAArgs) {
 				va.m[url] = append(va.m[url], ch.back)
 				va.mu.Unlock()
 			}
-		} else if mongodb.Exists(av) {
-			// 只有当任务完成时, 才会持久化到 mongodb
-			va.mu.Unlock()
-			ch.back <- nil
 		} else {
-			// 如果不存在, 则保存管道, 开始执行任务. 先加入 redis 再解锁
+			// 如果不存在, 则保存管道, 开始执行任务. 先加入数据库再解锁
 			va.m[url] = append(va.m[url], ch.back)
-			redis.InsertOne(av)
+			mongodb.InsertOne(av)
 			va.mu.Unlock()
 			go va.videoAnalysis(av, ch.fpath, ch.location)
 		}
@@ -153,8 +148,7 @@ func (va *VAScheduler) videoAnalysis(av *absvideo.AbsVideo, fpath string, locati
 	av.Status = util.AbsVideoComplete
 	va.mu.Lock()
 	defer va.mu.Unlock()
-	redis.InsertOne(av)
-	mongodb.InsertOne(av)
+	mongodb.UpdataOne(av)
 	for _, b := range va.m[av.URL] {
 		b <- nil
 	}
@@ -170,7 +164,7 @@ func (va *VAScheduler) errHappen(av *absvideo.AbsVideo, status int32, format str
 	}
 	delete(va.m, av.URL)
 	av.Status = status
-	redis.UpdataOne(av)
+	mongodb.UpdataOne(av)
 	// 打印错误日志
 	logger.Error.Println(err)
 }

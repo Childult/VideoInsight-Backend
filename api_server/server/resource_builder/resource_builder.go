@@ -7,7 +7,6 @@ import (
 	"strings"
 	"swc/data/resource"
 	"swc/dbs/mongodb"
-	"swc/dbs/redis"
 	"swc/logger"
 	"swc/server/python"
 	"swc/util"
@@ -64,9 +63,9 @@ func (ts *ResourceScheduler) scheduler(chs chan *RSArgs) {
 		// 查看是否有已经完成或正在进行的任务
 		// 加锁, 保证对管道(m)的访问时串行的
 		ts.mu.Lock()
-		if redis.Exists(r) {
+		if mongodb.Exists(r) {
 			// 如果已存在, 取回资源
-			redis.FindOne(r)
+			mongodb.FindOne(r)
 
 			// 判断资源状态
 			if r.Status == util.ResourceCompleted {
@@ -82,19 +81,15 @@ func (ts *ResourceScheduler) scheduler(chs chan *RSArgs) {
 				ts.m[url] = append(ts.m[url], ch.back)
 				ts.mu.Unlock()
 			}
-		} else if mongodb.Exists(r) {
-			// 只有当任务完成时, 才会持久化到 mongodb
-			ts.mu.Unlock()
-			ch.back <- nil
 		} else {
-			// 资源不存在, 则保存管道, 开始执行任务. 先加入 redis 再解锁
+			// 资源不存在, 则保存管道, 开始执行任务. 先加入数据库再解锁
 			ts.m[url] = append(ts.m[url], ch.back)
 			// 更新状态
 			r.Status = util.ResourceCreated
 			// 保存地址, 以时间戳为文件夹
 			r.Location = filepath.Join(util.Location, strconv.FormatInt(time.Now().Unix(), 10)) + "/"
 			// 插入数据库, 这样后面相同的链接就不会重复下载了
-			redis.InsertOne(r)
+			mongodb.InsertOne(r)
 			ts.mu.Unlock()
 
 			// 开启下载任务
@@ -106,7 +101,7 @@ func (ts *ResourceScheduler) scheduler(chs chan *RSArgs) {
 func (rs *ResourceScheduler) Downloader(r *resource.Resource) {
 	// 开始下载视频
 	r.Status = util.ResourceDownloading
-	redis.UpdataOne(r)
+	mongodb.UpdataOne(r)
 
 	// 构建视频下载对象
 	videoDownloader := python.PyWorker{
@@ -133,11 +128,11 @@ func (rs *ResourceScheduler) Downloader(r *resource.Resource) {
 	logger.Debug.Printf("[视频下载] 视频下载成功: %+v.\n", vdReturn)
 	r.VideoPath = vdReturn
 	r.Status = util.ResourceDownloadDone
-	redis.UpdataOne(r)
+	mongodb.UpdataOne(r)
 
 	// 开始提取音频
 	r.Status = util.ResourceAudioExtracting
-	redis.UpdataOne(r)
+	mongodb.UpdataOne(r)
 
 	// 构建音频提取对象
 	audioExtractor := python.PyWorker{
@@ -162,8 +157,7 @@ func (rs *ResourceScheduler) Downloader(r *resource.Resource) {
 	r.Status = util.ResourceCompleted
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
-	redis.UpdataOne(r)
-	mongodb.InsertOne(r)
+	mongodb.UpdataOne(r)
 	for _, back := range rs.m[r.URL] {
 		back <- nil
 	}
@@ -179,7 +173,7 @@ func (rs *ResourceScheduler) errHappen(r *resource.Resource, status int32, forma
 	}
 	delete(rs.m, r.URL)
 	r.Status = status
-	redis.UpdataOne(r)
+	mongodb.UpdataOne(r)
 	// 打印错误日志
 	logger.Error.Println(err)
 	fmt.Println("测试", err)

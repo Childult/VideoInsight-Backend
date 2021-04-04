@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"swc/data/job"
 	"swc/dbs/mongodb"
-	"swc/dbs/redis"
 	"swc/logger"
 	"swc/server/task_builder"
 	"sync"
@@ -51,7 +50,7 @@ var PostJob = func(c *gin.Context) {
 	// 构建任务
 	newJob := job.NewJob(jpm.DeviceID, jpm.URL, jpm.KeyWords)
 	jobMu.Lock()
-	if redis.Exists(newJob) || mongodb.Exists(newJob) {
+	if mongodb.Exists(newJob) {
 		jobMu.Unlock()
 		// 返回 JobID
 		rt = ReturnType{
@@ -59,9 +58,8 @@ var PostJob = func(c *gin.Context) {
 			Message: "任务已存在",
 			Result:  gin.H{"job_id": newJob.JobID}}
 	} else {
-		redis.InsertOne(newJob)
+		mongodb.InsertOne(newJob)
 		jobMu.Unlock()
-		go mongodb.InsertOne(newJob)
 
 		// 开启任务
 		go task_builder.AddTask(newJob.URL, newJob.KeyWords)

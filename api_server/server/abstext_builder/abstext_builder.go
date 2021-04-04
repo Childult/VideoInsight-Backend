@@ -7,7 +7,6 @@ import (
 	"strings"
 	"swc/data/abstext"
 	"swc/dbs/mongodb"
-	"swc/dbs/redis"
 	"swc/logger"
 	"swc/server/python"
 	"swc/util"
@@ -65,10 +64,10 @@ func (ta *TAScheduler) scheduler(chs chan *TAArgs) {
 		// 查看是否有已经完成或正在进行的任务
 		// 加锁, 保证对管道(m)的访问时串行的
 		ta.mu.Lock()
-		// 先从 redis 中找, redis 中的数据会过期
-		if redis.Exists(at) {
+		// 先从数据库中找
+		if mongodb.Exists(at) {
 			// 如果已经存在, 取回文本摘要
-			redis.InsertOne(at)
+			mongodb.FindOne(at)
 
 			// 判断文本摘要状态
 			if at.Status == util.AbsTextComplete {
@@ -84,14 +83,10 @@ func (ta *TAScheduler) scheduler(chs chan *TAArgs) {
 				ta.m[at.Hash] = append(ta.m[at.Hash], ch.back)
 				ta.mu.Unlock()
 			}
-		} else if mongodb.Exists(at) {
-			// 只有当任务完成时, 才会持久化到 mongodb
-			ta.mu.Unlock()
-			ch.back <- nil
 		} else {
-			// 如果不存在, 则保存管道, 开始执行任务. 先加入 redis 再解锁
+			// 如果不存在, 则保存管道, 开始执行任务. 先加入数据库再解锁
 			ta.m[at.Hash] = append(ta.m[at.Hash], ch.back)
-			redis.InsertOne(at)
+			mongodb.InsertOne(at)
 			ta.mu.Unlock()
 			go ta.textAnalysis(at, ch.fpath, ch.back)
 		}
@@ -143,8 +138,7 @@ func (ta *TAScheduler) textAnalysis(at *abstext.AbsText, fpath string, back chan
 	at.Status = util.AbsTextComplete
 	ta.mu.Lock()
 	defer ta.mu.Unlock()
-	redis.UpdataOne(at)
-	mongodb.InsertOne(at)
+	mongodb.UpdataOne(at)
 	for _, b := range ta.m[at.Hash] {
 		b <- nil
 	}
@@ -161,7 +155,7 @@ func (ta *TAScheduler) errHappen(at *abstext.AbsText, status int32, format strin
 	}
 	delete(ta.m, at.Hash)
 	at.Status = status
-	redis.UpdataOne(at)
+	mongodb.UpdataOne(at)
 	// 打印错误日志
 	logger.Error.Println(err)
 }

@@ -11,7 +11,6 @@ import (
 	"swc/data/resource"
 	"swc/data/task"
 	"swc/dbs/mongodb"
-	"swc/dbs/redis"
 	"swc/logger"
 	"swc/util"
 
@@ -43,7 +42,7 @@ var GetJob = func(c *gin.Context) {
 	}
 
 	j := job.NewJob(jpm.DeviceID, jpm.URL, jpm.KeyWords)
-	if !redis.Exists(j) && !mongodb.Exists(j) {
+	if !mongodb.Exists(j) {
 		// 获取资源出错
 		logger.Warning.Println("[GET] 查询了不存在的任务")
 		rt = ReturnType{
@@ -56,9 +55,7 @@ var GetJob = func(c *gin.Context) {
 
 	// 查找数据
 	newTask := task.NewTask(jpm.URL, jpm.KeyWords)
-	if redis.Exists(newTask) {
-		redis.FindOne(newTask)
-	} else if mongodb.Exists(newTask) {
+	if mongodb.Exists(newTask) {
 		mongodb.FindOne(newTask)
 	} else {
 		// 获取资源出错
@@ -68,7 +65,6 @@ var GetJob = func(c *gin.Context) {
 			Message: fmt.Sprintf("未找到`job_id=%s`的任务", j),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)
-		redis.DeleteOne(j)
 		mongodb.DeleteOne(j)
 		return
 	}
@@ -118,9 +114,7 @@ var GetJobID = func(c *gin.Context) {
 	// 获取数据
 	jobID := c.Param("job_id")
 	newJob := &job.Job{JobID: jobID}
-	if redis.Exists(newJob) {
-		redis.FindOne(newJob)
-	} else if mongodb.Exists(newJob) {
+	if mongodb.Exists(newJob) {
 		mongodb.FindOne(newJob)
 	} else {
 		// 获取资源出错
@@ -134,9 +128,7 @@ var GetJobID = func(c *gin.Context) {
 	}
 
 	newTask := task.NewTask(newJob.URL, newJob.KeyWords)
-	if redis.Exists(newTask) {
-		redis.FindOne(newTask)
-	} else if mongodb.Exists(newTask) {
+	if mongodb.Exists(newTask) {
 		mongodb.FindOne(newTask)
 	} else {
 		// 获取资源出错
@@ -146,7 +138,6 @@ var GetJobID = func(c *gin.Context) {
 			Message: fmt.Sprintf("未找到`job_id=%s`的任务", jobID),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)
-		redis.DeleteOne(newJob)
 		mongodb.DeleteOne(newJob)
 		return
 	}
