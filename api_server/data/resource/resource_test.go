@@ -63,7 +63,7 @@ func TestMongodb(t *testing.T) {
 	assert.Equal(t, expectBool, actualBool)
 
 	// 根据主键更新数据
-	d.AbsText = "摘要"
+	d.Location = "/摘要"
 	expectErr = nil
 	actualErr = mongodb.UpdataOne(d)
 	assert.Equal(t, expectErr, actualErr)
@@ -105,7 +105,7 @@ func TestRedis(t *testing.T) {
 	assert.Equal(t, expectBool, actualBool)
 
 	// 根据主键更新数据
-	d.AbsText = "摘要"
+	d.Location = "/摘要"
 	expectErr = nil
 	actualErr = redis.UpdataOne(d)
 	assert.Equal(t, expectErr, actualErr)
@@ -125,12 +125,12 @@ func TestRedis(t *testing.T) {
 func TestMongodbCRUD(t *testing.T) {
 	// 在 redis 中的插入, 查询, 删除测试
 	tests := []*Resource{
-		{"网址1", 0, "存储路径", "视频", "音频", "文本摘要"},
-		{"网址2", 0, "存储路径", "视频", "音频", ""},
-		{"网址3", 0, "存储路径", "视频", "", ""},
-		{"网址4", 0, "存储路径", "", "", ""},
-		{"网址5", 0, "", "", "", ""},
-		{"", 0, "", "", "", ""},
+		{"网址1", 0, "存储路径", "视频", "音频"},
+		{"网址2", 0, "存储路径", "视频", "音频"},
+		{"网址3", 0, "存储路径", "视频", ""},
+		{"网址4", 0, "存储路径", "", ""},
+		{"网址5", 0, "", "", ""},
+		{"", 0, "", "", ""},
 	}
 	var err error
 	// mongodb 查找时, 会覆盖数据中原有的内容, 即使找到的值是空
@@ -156,12 +156,12 @@ func TestMongodbCRUD(t *testing.T) {
 func TestRedisCRUD(t *testing.T) {
 	// 在 mongodb 中的插入, 查询, 删除测试
 	tests := []*Resource{
-		{"网址1", 0, "存储路径", "视频", "音频", "文本摘要"},
-		{"网址2", 0, "存储路径", "视频", "音频", ""},
-		{"网址3", 0, "存储路径", "视频", "", ""},
-		{"网址4", 0, "存储路径", "", "", ""},
-		{"网址5", 0, "", "", "", ""},
-		{"", 0, "", "", "", ""},
+		{"网址1", 0, "存储路径", "视频", "音频"},
+		{"网址2", 0, "存储路径", "视频", "音频"},
+		{"网址3", 0, "存储路径", "视频", ""},
+		{"网址4", 0, "存储路径", "", ""},
+		{"网址5", 0, "", "", ""},
+		{"", 0, "", "", ""},
 	}
 	var err error
 

@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	Database   = "swcdb"
 	Collection = "abstract_text"
 )
 

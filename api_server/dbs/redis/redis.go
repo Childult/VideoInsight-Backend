@@ -2,6 +2,7 @@ package redis
 
 import (
 	"swc/logger"
+	"swc/util"
 	"time"
 
 	redigo "github.com/gomodule/redigo/redis"
@@ -70,7 +71,9 @@ func ping(c redigo.Conn, t time.Time) error {
 
 // Get 返回 redis 的连接对象, 使用完应该释放
 func Get() redigo.Conn {
-	return poll.Get()
+	conn := poll.Get()
+	conn.Do("select", util.RedisDB)
+	return conn
 }
 
 // redisData 定义 redis 数据的接口, 实现该接口可以在 redis 里增删改查

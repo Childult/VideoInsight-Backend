@@ -1,4 +1,4 @@
-package job
+package task
 
 import (
 	"context"
@@ -19,7 +19,8 @@ func init() {
 }
 
 var (
-	d *Job = new(Job)
+	d  *Task = new(Task)
+	dd *Task = new(Task)
 )
 
 func TestFindAll(t *testing.T) {
@@ -61,9 +62,21 @@ func TestMongodb(t *testing.T) {
 	actualBool = mongodb.Exists(d)
 	assert.Equal(t, expectBool, actualBool)
 
+	// 根据主键更新数据
+	d.TextHash = "摘要"
+	expectErr = nil
+	actualErr = mongodb.UpdataOne(d)
+	assert.Equal(t, expectErr, actualErr)
+
+	// 存在时查找
+	expectErr = nil
+	actualErr = mongodb.FindOne(dd)
+	assert.Equal(t, expectErr, actualErr)
+	assert.Equal(t, d, dd)
+
 	// 删除数据
 	expectErr = nil
-	actualErr = mongodb.DeleteOne(d)
+	actualErr = mongodb.DeleteOne(dd)
 	assert.Equal(t, expectErr, actualErr)
 }
 
@@ -91,70 +104,82 @@ func TestRedisCRUD(t *testing.T) {
 	actualBool = redis.Exists(d)
 	assert.Equal(t, expectBool, actualBool)
 
+	// 根据主键更新数据
+	d.TextHash = "摘要"
+	expectErr = nil
+	actualErr = redis.UpdataOne(d)
+	assert.Equal(t, expectErr, actualErr)
+
+	// 存在时查找
+	expectErr = nil
+	actualErr = redis.FindOne(dd)
+	assert.Equal(t, expectErr, actualErr)
+	assert.Equal(t, d, dd)
+
 	// 删除数据
 	expectErr = nil
-	actualErr = redis.DeleteOne(d)
+	actualErr = redis.DeleteOne(dd)
 	assert.Equal(t, expectErr, actualErr)
 }
 func TestMongodbCRUD(t *testing.T) {
 	// 在 mongodb 中的插入, 查询, 删除测试
-	tests := []*Job{
-		NewJob("id1", "网址", []string{"关键词1", "关键词2"}),
-		NewJob("id1", "网址", []string{"关键词1"}),
-		NewJob("id1", "网址", []string{""}),
-		NewJob("id1", "网址", []string{}),
-		NewJob("id1", "", []string{}),
-		NewJob("id1", "", []string{}),
-		NewJob("id1", "", nil),
+	tests := []*Task{
+		NewTask("网址", []string{"关键词1", "关键词2"}),
+		NewTask("网址", []string{"关键词1"}),
+		NewTask("网址", []string{""}),
+		NewTask("网址", []string{}),
+		NewTask("", []string{}),
+		NewTask("", []string{}),
+		NewTask("", nil),
 	}
 	var err error
-	newJob := &Job{}
+	newTask := &Task{}
 
-	for _, job := range tests {
+	for _, task := range tests {
 		// 保存数据
-		err = mongodb.InsertOne(job)
+		err = mongodb.InsertOne(task)
 		assert.Equal(t, nil, err)
 
 		// 读取数据
-		newJob.JobID = job.JobID
-		err = mongodb.FindOne(newJob)
+		newTask.TaskID = task.TaskID
+		err = mongodb.FindOne(newTask)
 		assert.Equal(t, nil, err)
-		assert.Equal(t, job, newJob)
+		assert.Equal(t, task, newTask)
 
 		// 删除数据
-		err = mongodb.DeleteOne(job)
+		err = mongodb.DeleteOne(task)
 		assert.Equal(t, nil, err)
 	}
 }
 
 func TestRedis(t *testing.T) {
 	// 在 redis 中的插入, 查询, 删除测试
-	tests := []*Job{
-		NewJob("id1", "网址", []string{"关键词1", "关键词2"}),
-		NewJob("id1", "网址", []string{"关键词1"}),
-		NewJob("id1", "网址", []string{""}),
-		NewJob("id1", "网址", []string{}),
-		NewJob("id1", "", []string{}),
-		NewJob("id1", "", []string{}),
-		NewJob("id1", "", nil),
+	tests := []*Task{
+		NewTask("网址", []string{"关键词1", "关键词2"}),
+		NewTask("网址", []string{"关键词1"}),
+		NewTask("网址", []string{""}),
+		NewTask("网址", []string{}),
+		NewTask("", []string{}),
+		NewTask("", []string{}),
+		NewTask("", nil),
 	}
 	var err error
 
 	// redis 反序列化时, 不会修改空值数据, 因此接收时尽量每次都是一个空的对象(除了主键)
-	for _, job := range tests {
-		newJob := &Job{}
+	for _, task := range tests {
+		newTask := &Task{}
 		// 保存数据
-		err = redis.InsertOne(job)
+		err = redis.InsertOne(task)
 		assert.Equal(t, nil, err)
 
 		// 读取数据
-		newJob.JobID = job.JobID
-		err = redis.FindOne(newJob)
+		newTask.TaskID = task.TaskID
+		err = redis.FindOne(newTask)
 		assert.Equal(t, nil, err)
-		assert.Equal(t, job, newJob)
+		assert.Equal(t, task, newTask)
 
 		// 删除数据
-		err = redis.DeleteOne(newJob)
+		err = redis.DeleteOne(newTask)
 		assert.Equal(t, nil, err)
 	}
 }

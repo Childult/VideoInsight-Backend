@@ -3,6 +3,8 @@ package job_router
 import (
 	"net/http"
 	"swc/data/job"
+	"swc/dbs/mongodb"
+	"swc/dbs/redis"
 	"swc/logger"
 
 	"github.com/gin-gonic/gin"
@@ -30,20 +32,22 @@ var DeleteJob = func(c *gin.Context) {
 	newJob := job.NewJob(jpm.DeviceID, jpm.URL, jpm.KeyWords)
 
 	// 删除数据库
-	err = newJob.Delete()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	err = newJob.Remove()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if redis.Exists(newJob) || mongodb.Exists(newJob) {
+		redis.DeleteOne(newJob)
+		mongodb.DeleteOne(newJob)
+		rt = ReturnType{
+			Status:  0,
+			Message: "删除成功",
+			Result:  ""}
+	} else {
+		rt = ReturnType{
+			Status:  -2,
+			Message: "资源不存在",
+			Result:  ""}
 	}
 
 	// 返回
 	logger.Debug.Println("[DELETE] 结束")
-	c.String(http.StatusOK, "")
+	c.JSON(http.StatusBadRequest, rt)
 
 }

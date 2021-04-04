@@ -1,58 +1,31 @@
 package server
 
-import (
-	"swc/data/job"
-	"swc/data/resource"
-	"swc/logger"
+// func waitDownload(task *task.Task, r *resource.Resource) {
+// 	logger.Info.Printf("[等待资源] 资源已经存在, 等待下载完成: %+v.\n", task)
+// 	// 获取资源信息
+// 	for {
+// 		switch r.Status {
+// 		case util.ResourceCompleted:
+// 			logger.Info.Println("[等待资源] 资源下载完成, 音频提取成功")
+// 			task.Status = util.JobToTextExtract
+// 			redis.UpdataOne(task)
+// 			return
+// 		case util.ResourceErrDownloadFailed:
+// 			logger.Error.Println("[等待资源] 资源下载失败")
+// 			task.Status = util.JobErrDownloadFailed
+// 			redis.UpdataOne(task)
+// 			return
+// 		case util.ResourceErrAudioExtractFailed:
+// 			logger.Error.Println("[等待资源] 音频提取失败")
+// 			task.Status = util.JobErrAudioExtractFailed
+// 			redis.UpdataOne(task)
+// 			return
+// 		default:
+// 			logger.Warning.Println("[等待资源] 资源下载中, 等待完成")
+// 			time.Sleep(time.Second * 20)
+// 		}
 
-	"swc/util"
-	"time"
-)
-
-func waitDownload(job *job.Job) {
-	logger.Info.Printf("[候车间] 资源已经存在, 等待下载完成: %+v.\n", job)
-	// 获取资源信息
-	r := resource.Resource{URL: job.URL}
-	err := r.Retrieve()
-	if err != nil {
-		logger.Error.Printf("[候车间] 获取资源出错: %+v.\n", err)
-		job.Status = util.JobErrFailedToFindResource
-		job.Save()
-		go JobSchedule(job)
-		return
-	}
-
-	for {
-		logger.Debug.Printf("[候车间] 检查资源状态: %+v.\n", r)
-		if r.Status == util.ResourceCompleted {
-			logger.Debug.Println("[候车间] 资源下载完成")
-			job.Status = util.JobExtractAudioDone
-			job.Save()
-			go JobSchedule(job)
-			return
-		} else if r.Status == util.ResourceErrDownloadFailed {
-			logger.Error.Println("[候车间] 资源下载失败")
-			job.Status = util.JobErrDownloadFailed
-			job.Save()
-			go JobSchedule(job)
-			return
-		} else if r.Status == util.ResourceErrExtractFailed {
-			logger.Error.Println("[候车间] 音频提取失败")
-			job.Status = util.JobErrExtractFailed
-			job.Save()
-			go JobSchedule(job)
-			return
-		} else {
-			logger.Warning.Println("[候车间] 资源下载中, 等待完成")
-			time.Sleep(time.Second * 20)
-			err = r.Retrieve()
-			if err != nil {
-				logger.Error.Printf("[候车间] 获取资源出错: %+v.\n", err)
-				job.Status = util.JobErrFailedToFindResource
-				job.Save()
-				go JobSchedule(job)
-				return
-			}
-		}
-	}
-}
+// 		// 获取最新状态
+// 		redis.FindOne(r)
+// 	}
+// }

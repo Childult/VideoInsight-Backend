@@ -7,8 +7,10 @@ import (
 	"os"
 	"swc/data/abstext"
 	"swc/data/absvideo"
-	"swc/data/job"
 	"swc/data/resource"
+	"swc/data/task"
+	"swc/dbs/mongodb"
+	"swc/dbs/redis"
 	"swc/logger"
 	"swc/util"
 
@@ -35,18 +37,18 @@ var GetJob = func(c *gin.Context) {
 	}
 
 	// 查找数据
-	newJob := job.NewJob(jpm.DeviceID, jpm.URL, jpm.KeyWords)
-	err = newJob.Load()
+	newJob := task.NewTask(jpm.URL, jpm.KeyWords)
+	err = mongodb.FindOne(newJob)
 	if err == nil {
 		// 任务已完成
 		r := resource.Resource{URL: newJob.URL}
-		r.Load()
+		mongodb.FindOne(&r)
 
 		at := abstext.NewAbsText(newJob.URL, newJob.KeyWords)
-		at.Load()
+		mongodb.FindOne(at)
 
 		av := absvideo.AbsVideo{URL: newJob.URL}
-		av.Load()
+		mongodb.FindOne(&av)
 
 		prefix := r.Location
 		pictures := make(map[string]string)
@@ -64,21 +66,22 @@ var GetJob = func(c *gin.Context) {
 				"text":     at.Abstract,
 				"pictures": pictures,
 			}}
+		c.JSON(http.StatusOK, rt)
+		return
 	}
 
-	err = newJob.Retrieve()
-	if err != nil {
+	if !redis.Exists(newJob) {
 		// 获取资源出错
-		logger.Error.Println("[GET] 获取资源出错")
+		logger.Warning.Println("[GET] 查询了不存在的任务")
 		rt = ReturnType{
 			Status:  -3,
-			Message: fmt.Sprintf("未找到`job_id=%s`的任务", newJob.JobID),
+			Message: fmt.Sprintf("未找到`job_id=%s`的任务", newJob.TaskID),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)
 		return
 	}
-
-	// 如果任务已经完成
+	// 任务已经存在, 且未完成
+	redis.FindOne(newJob)
 	rt = ReturnType{
 		Status:  int(newJob.Status),
 		Message: util.GetJobStatus(newJob.Status),

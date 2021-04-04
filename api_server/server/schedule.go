@@ -2,43 +2,103 @@ package server
 
 import (
 	"swc/data/job"
+	"swc/data/resource"
+	"swc/data/task"
+	"swc/dbs/mongodb"
+	"swc/dbs/redis"
 	"swc/logger"
 	"swc/util"
+	"sync"
 )
 
-// JobSchedule .
-func JobSchedule(job *job.Job) {
-	status := job.Status
+func StartJob(job *job.Job) {
+	// 目前不考虑有没有关键字, 直接创建
+	t := task.NewTask(job.URL, job.KeyWords)
+	StartTask(t)
+}
 
-	if status > util.JobCompleted {
-		logger.Error.Printf("[任务调度] 任务失败, 错误代码: %d, 原因: %s.\n", status, util.GetJobStatus(status))
-		return
+var taskMu sync.Mutex
+
+func StartTask(task *task.Task) {
+	// 加锁, 保证一个任务不会被创建两次. 一个任务对应一个URL+关键字
+	taskMu.Lock()
+	defer taskMu.Unlock()
+
+	// 先查看该任务是否已经完成
+	if redis.Exists(task) || mongodb.Exists(task) {
+		// 重复提交任务, 该任务存在
+		logger.Warning.Printf("[Start task] 重复提交任务, 该任务存在: %+v.\n", task)
+	} else {
+		// 都不存在, 创建一个新的任务
+		err := redis.InsertOne(task)
+		if err != nil {
+			logger.Error.Printf("[Start task] 插入数据库失败. 原始数据: <%+v>, error: <%s>\n", task, err)
+			return
+		}
+
+		// 任务创建成功, 开始执行
+		logger.Info.Printf("[Start task] 任务创建成功, 开始执行: %+v.\n", task)
+		go taskSchedule(task)
 	}
+}
 
-	if status&util.JobCompleted != 0 {
-		logger.Info.Printf("[任务调度] 任务完成: %+v.\n", job)
+// taskSchedule .
+func taskSchedule(task *task.Task) {
+	var r *resource.Resource
+	wg := new(sync.WaitGroup)
 
-	} else if status&util.JobStart != 0 {
-		go creatResource(job) // 创建资源
+	// 不断循环, 直到任务完成或发生错误
+	for task.Status < util.JobCompleted {
+		switch task.Status {
+		// 创建资源
+		case util.JobStart:
+			r = creatResource(task)
 
-	} else if status&util.JobDownloadMedia != 0 {
-		go mediaDownload(job) // 下载视频
+		// 下载资源
+		case util.JobToDownloadMedia:
+			mediaDownload(task, r)
 
-	} else if status&util.JobExisted != 0 {
-		go waitDownload(job) // 资源已经存在, 等待下载完成
+		// 提取音频
+		case util.JobToExtractAudio:
+			extractAudio(task, r)
 
-	} else if status&util.JobExtractAudio != 0 {
-		go extractAudio(job) // 提取音频
+		// 只进行文本分析, 视频分析会在另一个协程里完成
+		case util.JobToTextExtract:
+			redis.FindOne(r)
+			wg.Add(1)
+			go extractTextAbstract(task, r) // 音频提取成功, 提取文本摘要
+			wg.Wait()
 
-	} else if status&util.JobExtractAudioDone != 0 {
-		go extractTextAbstract(job)  // 音频提取成功, 提取文本摘要
-		go extractVideoAbstract(job) // 音频提取成功, 提取视频摘要
+		// 音频提取成功, 开始提取文本摘要和视频摘要
+		case util.JobAudioExtractDone:
+			wg.Add(1)
+			go extractTextAbstract(task, r) // 音频提取成功, 提取文本摘要
+			wg.Add(1)
+			go extractVideoAbstract(task, r) // 音频提取成功, 提取视频摘要
+			wg.Wait()
+		}
+	}
+	if task.Status == util.JobCompleted {
+		logger.Info.Printf("[任务调度] 任务完成: %+v.\n", task)
+	} else if task.Status > util.JobCompleted {
+		logger.Error.Printf("[任务调度] 任务失败, 错误代码: %d, 原因: %s.\n", task.Status, util.GetJobStatus(task.Status))
+	}
+}
 
-	} else if status&util.JobTextAbstractExtractionDone != 0 {
-		go extractVideoAbstract(job) // 文本摘要完成, 但视频摘要未完成
+var absMu sync.Mutex
 
-	} else if status&util.JobVideoAbstractExtractionDone != 0 {
-		go extractTextAbstract(job) // 视频摘要完成, 但文本摘要未完成
-
+func setAbstractFlag(t *task.Task, status int32) {
+	absMu.Lock()
+	defer absMu.Unlock()
+	if t.Status > util.JobCompleted {
+		return
+	} else if t.Status == util.JobTextAbstractExtractionDone && status == util.JobVideoAbstractExtractionDone ||
+		t.Status == util.JobVideoAbstractExtractionDone && status == util.JobTextAbstractExtractionDone {
+		t.Status = util.JobCompleted
+		redis.UpdataOne(t)
+		mongodb.InsertOne(t)
+	} else {
+		t.Status = status
+		redis.UpdataOne(t)
 	}
 }

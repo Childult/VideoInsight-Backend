@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"swc/data/job"
 	"swc/logger"
 	"swc/util"
 	"sync"
@@ -32,9 +31,6 @@ func SetArg(i interface{}) string {
 	return result
 }
 
-// PythonHandlerFunc python 回调函数
-type PythonHandlerFunc func(job *job.Job, result []string)
-
 // getCmd 执行命令设置, 调用采用`python -c`, 直接在命令行里写一个简单调用的代码
 func (py *PyWorker) getCmd() (r string) {
 	r = fmt.Sprintf("\n"+
@@ -49,7 +45,7 @@ func (py *PyWorker) getCmd() (r string) {
 }
 
 // Call 采用管道和`-c`参数, 可以实时输出
-func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
+func (py *PyWorker) Call() (result []string) {
 	cmd := exec.Command("python3", "-u", "-c", py.getCmd())
 	logger.Debug.Println("[python]", cmd.Args)
 	wg := sync.WaitGroup{}
@@ -68,20 +64,14 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 		return
 	}
 
-	// 错误直接输出
+	// 标准错误直接输出
 	wg.Add(1)
 	go EasyOut(&wg, stderr)
 
-	// 标准输出进行处理
-	if handles == nil {
-		wg.Add(1)
-		go HandleOut(&wg, stdout, job, nil)
-	} else {
-		for _, handle := range handles {
-			wg.Add(1)
-			go HandleOut(&wg, stdout, job, handle)
-		}
-	}
+	// 标准输出需要获取结果
+	ch := make(chan []string)
+	wg.Add(1)
+	go HandleOut(&wg, stdout, ch)
 
 	// 开始调用
 	err = cmd.Start()
@@ -89,12 +79,17 @@ func (py *PyWorker) Call(job *job.Job, handles ...PythonHandlerFunc) {
 		logger.Error.Println("[python]", err)
 		return
 	}
+
+	result = <-ch
 	wg.Wait()
 	logger.Debug.Println("[python] 结束", cmd.Args)
+	return
 }
 
+var buffSize = 1024 * 10
+
 // HandleOut 处理标准输出
-func HandleOut(wg *sync.WaitGroup, r io.Reader, job *job.Job, handles PythonHandlerFunc) {
+func HandleOut(wg *sync.WaitGroup, r io.Reader, ch chan []string) {
 	logger.Debug.Println("[HandleOut] 开始.")
 	Delimiter := "GoTOPythonDelimiter "
 	len := len(Delimiter)
@@ -102,7 +97,7 @@ func HandleOut(wg *sync.WaitGroup, r io.Reader, job *job.Job, handles PythonHand
 	var result []string
 
 	var sb strings.Builder
-	buf := make([]byte, 256)
+	buf := make([]byte, buffSize)
 
 	for {
 		sb.Reset()
@@ -129,9 +124,7 @@ func HandleOut(wg *sync.WaitGroup, r io.Reader, job *job.Job, handles PythonHand
 			}
 		}
 	}
-	if handles != nil {
-		go handles(job, result)
-	}
+	ch <- result
 	wg.Done()
 	logger.Debug.Println("[HandleOut] 结束.")
 }
@@ -140,7 +133,7 @@ func HandleOut(wg *sync.WaitGroup, r io.Reader, job *job.Job, handles PythonHand
 func EasyOut(wg *sync.WaitGroup, r io.Reader) {
 	logger.Debug.Println("[EasyOut] 开始.")
 	var sb strings.Builder
-	buf := make([]byte, 1024*10)
+	buf := make([]byte, buffSize)
 
 	for {
 		sb.Reset()

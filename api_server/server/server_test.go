@@ -2,32 +2,22 @@ package server
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
-	"path/filepath"
 	"strings"
-	"swc/data/job"
-	"swc/data/resource"
+	"swc/data/task"
+	"swc/dbs/mongodb"
+	"swc/dbs/redis"
 	"swc/util"
-	"sync"
 	"testing"
 	"time"
 )
 
-// 回调完成标志
-var sw = sync.WaitGroup{}
-var isCompleted = false
-
-func simplifiedHandle(job *job.Job, result []string) {
-	// 是否执行成功
-	if len(result) == 0 {
-		fmt.Println("[python回调] 执行失败")
-	} else {
-		fmt.Println("[python回调] 执行成功, 结果如下")
-		pythonReturn := strings.Join(result, "")
-		fmt.Println(pythonReturn)
-	}
-	isCompleted = true
-	sw.Done()
+func init() {
+	redis.InitRedis("172.17.0.4:6379", "")
+	mongodb.InitMongodb("192.168.2.80:27018", "", "")
+	util.MongoDB = "test"
+	util.RedisDB = 1
 }
 
 func TestPythonCaller(t *testing.T) {
@@ -53,9 +43,17 @@ func TestPythonCaller(t *testing.T) {
 			SetArg("2"), // 字符串 2
 		},
 	}
-	sw.Add(1)
-	go python.Call(nil, simplifiedHandle)
-	sw.Wait()
+	result := python.Call()
+
+	// 是否执行成功
+	if len(result) == 0 {
+		fmt.Println("[python 调用模块测试] 执行失败")
+	} else {
+		fmt.Println("[python 调用模块测试] 执行成功, 结果如下")
+		pythonReturn := strings.Join(result, "")
+		fmt.Println(pythonReturn)
+	}
+
 	fmt.Println("[python 调用模块测试] 完成, 共使用", time.Since(start))
 	// 删除测试用的 python 文件
 	err = os.Remove("TestPythonCaller.py")
@@ -64,28 +62,40 @@ func TestPythonCaller(t *testing.T) {
 	}
 }
 
+// 存活证明
+func ImAlive(end chan bool, start time.Time) {
+	for {
+		select {
+		case <-time.NewTicker(time.Second * time.Duration(rand.Int63n(20)+1)).C:
+			fmt.Println("已经过去了", time.Since(start))
+		case x := <-end:
+			if x == true {
+				return
+			}
+		}
+	}
+}
+
 func TestVideoDownload(t *testing.T) {
+	URL := "https://www.bilibili.com/video/BV1wp4y1C7Cz" // 测试连接
+	// Location := "/swc/resource/test"                     // 保存地址
+
+	// &{https://www.bilibili.com/video/BV1wp4y1C7Cz 4 /swc/resource/1617284325/ MTYxNzI4NDM3NC40OTY5NzU0aHR0cHM6Ly93d3cuYmlsaWJpbGkuY29tL3ZpZGVvL0JWMXdwNHkxQzdDeg==.mp4 MTYxNzI4NDM3NC40OTY5NzU0aHR0cHM6Ly93d3cuYmlsaWJpbGkuY29tL3ZpZGVvL0JWMXdwNHkxQzdDeg==.mp3 }
+	// &{30092e642b82bc6e0e60aa82 https://www.bilibili.com/video/BV1wp4y1C7Cz [] 5 }
+
 	// 测试视频下载模块
 	fmt.Println("[视频下载模块测试] 开始")
+	job := task.NewTask(URL, nil)
 	start := time.Now()
+	completed := make(chan bool)
+	go ImAlive(completed, start)
 
-	// 构建需要的对象
-	r := resource.Resource{
-		URL:      "https://www.bilibili.com/video/BV1PK411w7h8", // 测试连接
-		Location: "/swc/resource/test",                          // 保存地址
-	}
-	// 构建视频下载对象
-	python := PyWorker{
-		PackagePath: filepath.Join(util.WorkSpace, "video_getter"), // python 包地址
-		FileName:    "api",                                         // 文件名
-		MethodName:  "download_video",                              // 调用函数
-		Args: []string{ // 实参
-			SetArg(r.URL),      // 资源链接
-			SetArg(r.Location), // 保存路径
-		},
-	}
-	sw.Add(1)
-	go python.Call(nil, simplifiedHandle)
-	sw.Wait()
-	fmt.Println("[视频下载模块测试] 完成, 共使用", time.Since(start))
+	r := creatResource(job) // 创建资源
+	mediaDownload(job, r)   // 下载视频
+	extractAudio(job, r)    // 提取音频
+	completed <- true
+	fmt.Println(r)
+	fmt.Println(job)
+	redis.DeleteOne(r)
+	redis.DeleteOne(job)
 }

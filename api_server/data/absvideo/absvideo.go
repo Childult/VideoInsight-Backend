@@ -1,7 +1,6 @@
 package absvideo
 
 const (
-	Database   = "swcdb"
 	Collection = "abstract_video"
 )
 

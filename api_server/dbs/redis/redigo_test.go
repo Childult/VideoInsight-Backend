@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"strconv"
+	"swc/util"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 
 func init() {
 	InitRedis("172.17.0.4:6379", "")
+	util.RedisDB = 1
 }
 
 func TestSetGet(t *testing.T) {
@@ -21,11 +23,6 @@ func TestSetGet(t *testing.T) {
 	var expectErr, actualErr error
 	conn := Get()      // 获取连接
 	defer conn.Close() // 释放连接
-
-	// 切换到1号数据库, 防止数据污染
-	expectErr = nil
-	_, actualErr = conn.Do("select", 1)
-	assert.Equal(t, expectErr, actualErr)
 
 	// 简单插入
 	expectErr = nil
@@ -64,9 +61,9 @@ func TestSelect(t *testing.T) {
 	conn := Get()      // 获取连接
 	defer conn.Close() // 释放连接
 
-	// 切换到1号数据库
+	// 切换到2号数据库
 	expectErr = nil
-	_, actualErr = conn.Do("select", 1)
+	_, actualErr = conn.Do("select", 2)
 	assert.Equal(t, expectErr, actualErr)
 
 	// 简单插入数据
@@ -90,7 +87,7 @@ func TestSelect(t *testing.T) {
 
 	// 切换到1号数据库, 查找并删除
 	expectErr = nil
-	_, actualErr = conn2.Do("select", 1)
+	_, actualErr = conn2.Do("select", 2)
 	assert.Equal(t, expectErr, actualErr)
 
 	expectErr = nil
@@ -128,11 +125,6 @@ func TestStruct(t *testing.T) {
 	var expectErr, actualErr error
 	conn := Get()      // 获取连接
 	defer conn.Close() // 释放连接
-
-	// 切换到1号数据库, 防止数据污染
-	expectErr = nil
-	_, actualErr = conn.Do("select", 1)
-	assert.Equal(t, expectErr, actualErr)
 
 	ts1 := testStruct1{
 		[]string{"hello"},
@@ -188,11 +180,6 @@ func TestGobEncode(t *testing.T) {
 	var expectErr, actualErr error
 	conn := Get()      // 获取连接
 	defer conn.Close() // 释放连接
-
-	// 切换到1号数据库, 防止数据污染
-	expectErr = nil
-	_, actualErr = conn.Do("select", 1)
-	assert.Equal(t, expectErr, actualErr)
 
 	ts1 := testStruct3{
 		[]string{"hello", "world"},

@@ -5,46 +5,24 @@ import (
 	"path/filepath"
 	"strings"
 	"swc/data/abstext"
-	"swc/data/job"
 	"swc/data/resource"
+	"swc/data/task"
+	"swc/dbs/mongodb"
+	"swc/dbs/redis"
 	"swc/logger"
 	"swc/util"
 )
 
-func extractTextAbstract(job *job.Job) {
-	logger.Info.Printf("[提取文本摘要] 开始: %+v.\n", job)
-	// 判断资源是否已经存在
-	at := abstext.NewAbsText(job.URL, job.KeyWords)
-	at.ExistInMongodb()
-	if at.ExistInMongodb() { // 文本摘要已经提取完成
-		if job.Status&util.JobVideoAbstractExtractionDone != 0 { // 如果视频摘要已经提取完成
-			job.Status = util.JobCompleted
-			job.Save()
-			go JobSchedule(job)
-		} else {
-			job.Status = job.Status | util.JobTextAbstractExtractionDone
-			job.Save()
-		}
-	} else {
-		// 不存在就进行文本分析, 否则忽略
-		go textAnalysis(job)
-	}
+// textAbstract 用于存储文本分析的结果
+type textAbstract struct {
+	AText     string   `json:"AText"`
+	TAbstract []string `json:"TAbstract"`
+	Error     string   `json:"Error"`
 }
 
-// textAnalysis 文本分析
-// 不判断该资源是否做过文本分析, 直接插入数据库
-func textAnalysis(job *job.Job) {
-	logger.Info.Printf("[文本分析] 开始: %+v.\n", job)
-	// 获取资源信息
-	r := resource.Resource{URL: job.URL}
-	err := r.Retrieve()
-	if err != nil {
-		logger.Error.Printf("[文本分析] 获取资源出错: %+v.\n", err)
-		job.Status = util.JobErrFailedToFindResource
-		job.Save()
-		go JobSchedule(job)
-		return
-	}
+func extractTextAbstract(task *task.Task, r *resource.Resource) {
+	logger.Info.Printf("[提取文本摘要] 开始: %+v.\n", task)
+	// 开始进行文本分析
 
 	// 构建文本分析对象
 	python := PyWorker{
@@ -57,75 +35,42 @@ func textAnalysis(job *job.Job) {
 	}
 
 	// 文本分析
-	go python.Call(job, textHandle)
-}
-
-// textAbstract 用于存储文本分析的结果
-type textAbstract struct {
-	AText     string   `json:"AText"`
-	TAbstract []string `json:"TAbstract"`
-	Error     string   `json:"Error"`
-}
-
-// textHandle 文本分析的回调
-func textHandle(job *job.Job, result []string) {
-	logger.Info.Printf("[文本分析回调] 开始: %+v.\n", job)
-	// 获取资源信息
-	r := resource.Resource{URL: job.URL}
-	err := r.Retrieve()
-	if err != nil {
-		logger.Error.Printf("[文本分析回调] 获取资源出错: %+v.\n", err)
-		job.Status = util.JobErrFailedToFindResource
-		job.Save()
-		go JobSchedule(job)
-		return
-	}
+	result := python.Call()
 
 	if len(result) == 0 { // 未找到结果
-		logger.Error.Println("[文本分析回调] 文本分析失败.")
-		job.Status = util.JobErrTextAnalysisFailed
-		job.Save()
-		go JobSchedule(job)
+		logger.Error.Println("[提取文本摘要] 文本分析失败.")
+		task.Status = util.JobErrTextAnalysisFailed
+		redis.UpdataOne(task)
 		return
 	}
+
 	pythonReturn := strings.Join(result, "")
 
 	// 找到结果, 从返回结果中提取数据
 	var text textAbstract
-	err = json.Unmarshal([]byte(pythonReturn), &text)
+	err := json.Unmarshal([]byte(pythonReturn), &text)
 	if err != nil {
-		logger.Error.Printf("[文本分析回调] 从文本分析结果中获取JSON失败: %+v.\n", err)
-		job.Status = util.JobErrTextAnalysisReadJSONFailed
-		job.Save()
-		go JobSchedule(job)
+		logger.Error.Printf("[提取文本摘要] 从文本分析结果中获取JSON失败: %+v.\n", err)
+		task.Status = util.JobErrTextAnalysisReadJSONFailed
+		redis.UpdataOne(task)
 		return
 	}
 
 	if text.Error != "" {
-		logger.Error.Printf("[文本分析回调] 文本分析失败: %+v.\n", text.Error)
-		job.Status = util.JobErrTextAnalysisFailed
-		job.Save()
-		go JobSchedule(job)
+		logger.Error.Printf("[提取文本摘要] 文本分析失败: %+v.\n", text.Error)
+		task.Status = util.JobErrTextAnalysisFailed
+		redis.UpdataOne(task)
 		return
 	}
 
-	// 文本分析成功, 初始化需要存储的数据
-	abstext := abstext.NewAbsText(job.URL, job.KeyWords)
+	// 文本分析成功, 初始化需要存储的数据, 存入数据库
+	abstext := abstext.NewAbsText(task.URL, task.KeyWords)
 	abstext.Text = text.AText
 	abstext.Abstract = text.TAbstract
-	abstext.Dump()
+	redis.InsertOne(abstext)
+	mongodb.InsertOne(abstext)
 
-	r.AbsText = abstext.Hash
-	r.Save()
-	job.AbsText = abstext.Hash
-	job.Save()
-
-	if job.Status&util.JobVideoAbstractExtractionDone != 0 { // 视频分析已经完成
-		job.Status = util.JobCompleted
-		job.Save()
-	} else {
-		job.Status = util.JobTextAbstractExtractionDone
-		job.Save()
-	}
-	go JobSchedule(job)
+	task.TextHash = abstext.Hash
+	redis.UpdataOne(task)
+	setAbstractFlag(task, util.JobTextAbstractExtractionDone)
 }

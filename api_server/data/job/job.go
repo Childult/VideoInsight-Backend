@@ -4,22 +4,18 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"strings"
-	"swc/util"
 )
 
 const (
-	Database   = "swcdb"
 	Collection = "job"
 )
 
 // Job 用户每个请求对应一个任务
 type Job struct {
-	JobID    string   `bson:"job_id"              json:"job_id"`        // 唯一ID, 是一个 hash 值
-	DeviceID string   `bson:"device_id"           json:"device_id"`     // 用户设备ID
-	URL      string   `bson:"url"                 json:"url"`           // 目标地址
-	KeyWords []string `bson:"key_words"           json:"key_words"`     // 用户创建的关键字
-	Status   int32    `bson:"status"              json:"status"`        // 当前任务状态
-	AbsText  string   `bson:"abstract_text"       json:"abstract_text"` // 文本摘要在数据库中的哈希值, 可以复用
+	JobID    string   `bson:"job_id"              json:"job_id"`    // 唯一ID, 是一个 hash 值
+	DeviceID string   `bson:"device_id"           json:"device_id"` // 用户设备ID,
+	URL      string   `bson:"url"                 json:"url"`       // 目标地址, 资源和视频摘要的外键
+	KeyWords []string `bson:"key_words"           json:"key_words"` // 用户创建的关键字
 }
 
 // Tag 返回主键名
@@ -42,8 +38,6 @@ func NewJob(dID, url string, keyWords []string) (j *Job) {
 		JobID:    getJobID(dID, url, keyWords),
 		DeviceID: dID,
 		URL:      url,
-		KeyWords: keyWords,
-		Status:   util.JobStart,
 	}
 	if len(keyWords) == 0 {
 		j.KeyWords = nil
