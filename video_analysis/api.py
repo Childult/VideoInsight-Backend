@@ -66,7 +66,7 @@ def get_video_duration(file: str) -> int:
     video = cv2.VideoCapture(file)
 
     if not video.isOpened():
-        raise IOError('视频文件读取失败，请检查文件路径')
+        raise IOError('视频文件读取失败，请检查文件路径: ', file)
 
     fps = int(round(video.get(cv2.CAP_PROP_FPS)))  # 帧率
     frame_counter = int(video.get(cv2.CAP_PROP_FRAME_COUNT))  # 总帧数

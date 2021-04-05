@@ -1,9 +1,10 @@
+# 用于搭建测试环境
+
 version: "3"
 
 services:
   swc-redis:
     image: "redis:alpine"
-    restart: always
     environment:
       TZ: Asia/Shanghai
     ports:
@@ -11,28 +12,24 @@ services:
 
   swc-mongo:
     image: "mongo:4.4.4-bionic"
-    restart: always
     environment:
       TZ: Asia/Shanghai
     ports:
       - "27018:27017"
     volumes:
-      - /data/jhx/swc-db:/data/db
+      - /Your/Absolute/Path:/data/db
 
   video-analysis:
     build:
       context: ./video_analysis
-    restart: always
-    runtime: nvidia
     environment:
-      NVIDIA_VISIBLE_DEVICES: all
       TZ: Asia/Shanghai
     ports:
       - "50051:50051"
     volumes:
-      - /data/jhx/swc-log/:/swc/log/
-      - /data/jhx/swc-backend/video_analysis/:/swc/code/video_analysis/
-      - /data/jhx/swc-resource/:/swc/resource/
+      - /Your/Absolute/Path/swc-log/:/swc/log/
+      - /Your/Absolute/Path/swc-backend/video_analysis/:/swc/code/video_analysis/
+      - /Your/Absolute/Path/swc-resource/:/swc/resource/
 
   api-server:
     build: .
@@ -45,6 +42,6 @@ services:
       - swc-mongo
       - video-analysis
     volumes:
-      - /data/jhx/swc-backend/:/swc/code/
-      - /data/jhx/swc-resource/:/swc/resource/
-      - /data/jhx/swc-log/:/swc/log/
+      - /Your/Absolute/Path/swc-backend/:/swc/code/
+      - /Your/Absolute/Path/swc-resource/:/swc/resource/
+      - /Your/Absolute/Path/swc-log/:/swc/log/
