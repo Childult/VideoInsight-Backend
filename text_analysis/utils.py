@@ -142,3 +142,17 @@ def sen_generator(text: str, max_len=2000):
             count = len(sen)
             temp.append(sen)
     yield ''.join(temp)
+
+
+def process_punctuation(text: str) -> str:
+    """
+    处理文本末尾的标点符号
+    :param text:
+    :return:
+    """
+    if text.endswith('。') or text.endswith('?') or text.endswith('!'):
+        return text
+    if text.endswith(','):
+        text = text[:-1]
+    text += '。'
+    return text
