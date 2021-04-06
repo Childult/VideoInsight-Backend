@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from text_analysis.utils import full_to_half, sentence_split, preprocess_audio_text, sen_generator
+from text_analysis.utils import full_to_half, sentence_split, preprocess_audio_text, sen_generator, process_punctuation
 
 
 class TestUtils(TestCase):
@@ -70,3 +70,25 @@ class TestUtils(TestCase):
         for doc in documents:
             for seg in sen_generator(doc):
                 self.assertLessEqual(len(seg), 2000)
+
+    def test_process_punctuation(self):
+        test_data = [
+            (
+                '美国总统拜登推动了一个非常重要的外交活动,澳大利亚的总理、日本的首相开了一个视频会,but原先在这个大体上国务卿这个层次的四国外长这种或者四国安全对话上升成为了峰会。可能是拜登第一任期外交战略的核心就是所谓的全球民主峰会,显然靠这所谓不管是把它当成亚洲小北约也好,这个 court想打造成为一个复仇者联盟,指向中国的复仇者联盟,我们看到的不是一个复仇者联盟强大的能够拯救宇宙,共同的一个对头所谓的中国的问题。',
+                '美国总统拜登推动了一个非常重要的外交活动,澳大利亚的总理、日本的首相开了一个视频会,but原先在这个大体上国务卿这个层次的四国外长这种或者四国安全对话上升成为了峰会。可能是拜登第一任期外交战略的核心就是所谓的全球民主峰会,显然靠这所谓不管是把它当成亚洲小北约也好,这个 court想打造成为一个复仇者联盟,指向中国的复仇者联盟,我们看到的不是一个复仇者联盟强大的能够拯救宇宙,共同的一个对头所谓的中国的问题。'
+            ),
+            (
+                '美国的盟友怎么控制得住?美国现在的实力已经衰减到它没有信心,美国要去摆平这些盟友,',
+                '美国的盟友怎么控制得住?美国现在的实力已经衰减到它没有信心,美国要去摆平这些盟友。'
+            ),
+            (
+                '这个番茄中这个东西它是一种能够帮助我们长时间的学习,保持效率的一种学习方法',
+                '这个番茄中这个东西它是一种能够帮助我们长时间的学习,保持效率的一种学习方法。'
+            ),
+            (
+                '因为我们不是每一个人都能够保证自己能够一下子就能完全的进入25分钟的学习里面去的。所以我的单次学习时间不会低于30分钟,我就会立马停止我这一次的学习时间,还有很多人的单子学习时间会比这个更长,自己应该单子学习要学多长时间,',
+                '因为我们不是每一个人都能够保证自己能够一下子就能完全的进入25分钟的学习里面去的。所以我的单次学习时间不会低于30分钟,我就会立马停止我这一次的学习时间,还有很多人的单子学习时间会比这个更长,自己应该单子学习要学多长时间。'
+            ),
+        ]
+        for data in test_data:
+            self.assertEqual(process_punctuation(data[0]), data[1])
