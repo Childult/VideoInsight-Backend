@@ -4,6 +4,7 @@ import you_get
 import json
 import time
 import base64
+import signal, functools
 
 
 def download_video(url: str, path: str) -> str:
@@ -35,13 +36,28 @@ def download_video(url: str, path: str) -> str:
     container = parsed_text['streams'][fmt]['container']
 
     sys.argv = ['you-get', '-o', path, '-O', title, url, '--format=%s' % fmt, '--debug']
+    file = title + '.' + container
+
+    def handler(signum, frame):
+        raise TimeoutError()
+    
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(60)
+
     try:
         you_get.main()
     except Exception as e:
         return "Error: {0}".format(str(e))
+    finally:
 
-    return title + '.' + container
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, signal.SIG_DFL)
+        if not container == 'mp4':
+            os.system('ffmpeg -i ' + path + '/' + file + ' -vf scale=480:-1' + ' -vcodec h264 ' + title + '.mp4')
+            file = title + '.mp4'
+    
+    return file
 
 
 if __name__ == '__main__':
-    download_video('<test url>', '.')
+    download_video('https://live.bilibili.com/813364?hotRank=0', '.')
