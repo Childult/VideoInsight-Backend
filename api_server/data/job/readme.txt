@@ -1,0 +1,1 @@
+# job 的结构, 方法, 根据用户的设备id, 输入的url, keywords生成.
