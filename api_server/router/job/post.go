@@ -3,6 +3,7 @@ package job_router
 import (
 	"net/http"
 	"swc/data/job"
+	"swc/data/resource"
 	"swc/dbs/mongodb"
 	"swc/logger"
 	"swc/server/task_builder"
@@ -15,6 +16,7 @@ type ReturnType struct {
 	Status  int         `json:"status"`
 	Message string      `json:"message"`
 	Result  interface{} `json:"result"`
+	Title   string      `json:"title"`
 }
 
 // JobPostMessage 用户利用 POST 提交的数据, 用于为任务创建唯一的 ID
@@ -53,10 +55,7 @@ var PostJob = func(c *gin.Context) {
 	if mongodb.Exists(newJob) {
 		jobMu.Unlock()
 		// 返回 JobID
-		rt = ReturnType{
-			Status:  0,
-			Message: "任务已存在",
-			Result:  gin.H{"job_id": newJob.JobID}}
+		rt = GetRT(0, "任务已存在", gin.H{"job_id": newJob.JobID}, newJob.URL)
 	} else {
 		mongodb.InsertOne(newJob)
 		jobMu.Unlock()
@@ -65,10 +64,20 @@ var PostJob = func(c *gin.Context) {
 		go task_builder.AddTask(newJob.URL, newJob.KeyWords)
 
 		// 返回 JobID
-		rt = ReturnType{
-			Status:  0,
-			Message: "任务已接收",
-			Result:  gin.H{"job_id": newJob.JobID}}
+		rt = GetRT(0, "任务已接收", gin.H{"job_id": newJob.JobID}, newJob.URL)
 	}
 	c.JSON(http.StatusOK, rt)
+}
+
+func GetRT(status int, m string, r interface{}, url string) (rt ReturnType) {
+	rt.Status = status
+	rt.Message = m
+	rt.Result = r
+	rs := resource.Resource{URL: url}
+	mongodb.FindOne(&rs)
+	if rs.Title == "" {
+		rs.Title = "标题获取中..."
+	}
+	rt.Title = rs.Title
+	return
 }

@@ -94,14 +94,50 @@ func (ts *ResourceScheduler) scheduler(chs chan *RSArgs) {
 
 			// 开启下载任务
 			go ts.Downloader(r)
+			go ts.GetTitle(r)
 		}
 	}
+}
+
+func (rs *ResourceScheduler) GetTitle(r *resource.Resource) {
+	// 构建标题获取对象
+	titleGetter := python.PyWorker{
+		PackagePath: filepath.Join(util.WorkSpace, "video_getter"), // python 包地址
+		FileName:    "api",                                         // 文件名
+		MethodName:  "get_video_title",                             // 调用函数
+		Args: []string{ // 实参
+			python.SetArg(r.URL), // 资源链接
+		},
+	}
+
+	// 获取标题
+	resultTG := titleGetter.Call()
+
+	// 是否获取成功
+	if len(resultTG) == 0 { // 资源标题获取失败
+		rs.mu.Lock()
+		defer rs.mu.Unlock()
+		r.Title = "资源标题获取失败"
+		logger.Debug.Printf("[标题获取] 资源标题获取失败")
+		mongodb.UpdataOne(r)
+		return
+	}
+
+	// 获取成功, 更新状态
+	rs.mu.Lock()
+	defer rs.mu.Unlock()
+	tgReturn := strings.Join(resultTG, "")
+	logger.Debug.Printf("[标题获取] 资源标题获取成功: %+v.\n", tgReturn)
+	r.Title = tgReturn
+	mongodb.UpdataOne(r)
 }
 
 func (rs *ResourceScheduler) Downloader(r *resource.Resource) {
 	// 开始下载视频
 	r.Status = util.ResourceDownloading
+	rs.mu.Lock()
 	mongodb.UpdataOne(r)
+	rs.mu.Unlock()
 
 	// 构建视频下载对象
 	videoDownloader := python.PyWorker{
@@ -128,11 +164,15 @@ func (rs *ResourceScheduler) Downloader(r *resource.Resource) {
 	logger.Debug.Printf("[视频下载] 视频下载成功: %+v.\n", vdReturn)
 	r.VideoPath = vdReturn
 	r.Status = util.ResourceDownloadDone
+	rs.mu.Lock()
 	mongodb.UpdataOne(r)
+	rs.mu.Unlock()
 
 	// 开始提取音频
 	r.Status = util.ResourceAudioExtracting
+	rs.mu.Lock()
 	mongodb.UpdataOne(r)
+	rs.mu.Unlock()
 
 	// 构建音频提取对象
 	audioExtractor := python.PyWorker{

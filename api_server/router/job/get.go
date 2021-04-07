@@ -87,22 +87,19 @@ var GetJob = func(c *gin.Context) {
 			pictures[filename] = ImagesToBase64(prefix + filename)
 		}
 
-		rt = ReturnType{
-			Status:  int(newTask.Status),
-			Message: util.GetTaskStatus(newTask.Status),
-			Result: gin.H{
+		rt = GetRT(int(newTask.Status),
+			util.GetTaskStatus(newTask.Status),
+			gin.H{
 				"text":     at.Abstract,
 				"pictures": pictures,
-			}}
+			}, jpm.URL)
+
 		c.JSON(http.StatusOK, rt)
 		return
 	}
 
 	// 任务已经存在, 且未完成
-	rt = ReturnType{
-		Status:  int(newTask.Status),
-		Message: util.GetTaskStatus(newTask.Status),
-		Result:  ""}
+	rt = GetRT(int(newTask.Status), util.GetTaskStatus(newTask.Status), "", jpm.URL)
 
 	logger.Debug.Printf("[GET] 返回状态{%+v: %+v}.\n", rt.Status, rt.Message)
 	c.JSON(http.StatusOK, rt)
@@ -160,22 +157,19 @@ var GetJobID = func(c *gin.Context) {
 			pictures[filename] = ImagesToBase64(prefix + filename)
 		}
 
-		rt = ReturnType{
-			Status:  int(newTask.Status),
-			Message: util.GetTaskStatus(newTask.Status),
-			Result: gin.H{
+		rt = GetRT(int(newTask.Status),
+			util.GetTaskStatus(newTask.Status),
+			gin.H{
 				"text":     at.Abstract,
 				"pictures": pictures,
-			}}
+			}, newJob.URL)
+
 		c.JSON(http.StatusOK, rt)
 		return
 	}
 
 	// 任务已经存在, 且未完成
-	rt = ReturnType{
-		Status:  int(newTask.Status),
-		Message: util.GetTaskStatus(newTask.Status),
-		Result:  ""}
+	rt = GetRT(int(newTask.Status), util.GetTaskStatus(newTask.Status), "", newJob.URL)
 
 	logger.Debug.Printf("[GET] 返回状态{%+v: %+v}.\n", rt.Status, rt.Message)
 	c.JSON(http.StatusOK, rt)
