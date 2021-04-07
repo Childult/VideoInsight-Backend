@@ -7,18 +7,37 @@ import base64
 import signal, functools
 
 
-def download_video(url: str, path: str) -> str:
+def get_video_title(url: str) -> str:
+    """
+    获取视频标题
+    :param url: 视频URL
+    :return: 若成功返回视频标题，否则返回错误信息
+    """
+    try:
+        cmd = 'you-get ' + url + ' --json'
+        r = os.popen(cmd)
+        text = r.buffer.read().decode(encoding='utf8')
+        parsed_text = json.loads(text)
+        title = parsed_text['title']
+        res = title
+    except Exception as e:
+        res = e
+    return res
+
+
+def download_video(url: str, path: str, timeout: int=7200) -> str:
     """
     下载视频
     :param url: 视频URL
     :param path: 视频存储路径
+    :param timeout: 下载超时时间
     :return: 若成功返回文件名，否则返回错误信息
     """
-    cmd = 'you-get -o ' + path + ' ' + url + ' --json'
+    cmd = 'you-get ' + url + ' --json'
     r = os.popen(cmd)
     text = r.buffer.read().decode(encoding='utf8')
     parsed_text = json.loads(text)
-
+    
     # get title
     ts = time.time()
     title = base64.urlsafe_b64encode((str(ts) + url).encode('utf8')).decode('utf-8')
@@ -42,12 +61,12 @@ def download_video(url: str, path: str) -> str:
         raise TimeoutError()
     
     signal.signal(signal.SIGALRM, handler)
-    signal.alarm(7200)
+    signal.alarm(timeout)
 
     try:
         you_get.main()
     except Exception as e:
-        return "Error: {0}".format(str(e))
+        return "Error: {0}".format(e)
     finally:
         signal.alarm(0)
         signal.signal(signal.SIGALRM, signal.SIG_DFL)
@@ -59,4 +78,6 @@ def download_video(url: str, path: str) -> str:
 
 
 if __name__ == '__main__':
-    download_video('<test url>', '.')
+    test_url = '<test url>'
+    download_video(test_url, '.')
+    print(get_video_title(test_url))
