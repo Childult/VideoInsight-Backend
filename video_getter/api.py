@@ -21,7 +21,7 @@ def download_video(url: str, path: str) -> str:
 
     # get title
     ts = time.time()
-    title = base64.b64encode((str(ts) + url).encode('utf8')).decode('utf-8')
+    title = base64.urlsafe_b64encode((str(ts) + url).encode('utf8')).decode('utf-8')
 
     # get accessible qualities (480p default), format and container
     qualities = ['480', '720', '360', '240', '1080']
@@ -42,14 +42,13 @@ def download_video(url: str, path: str) -> str:
         raise TimeoutError()
     
     signal.signal(signal.SIGALRM, handler)
-    signal.alarm(60)
+    signal.alarm(7200)
 
     try:
         you_get.main()
     except Exception as e:
         return "Error: {0}".format(str(e))
     finally:
-
         signal.alarm(0)
         signal.signal(signal.SIGALRM, signal.SIG_DFL)
         if not container == 'mp4':
@@ -60,4 +59,4 @@ def download_video(url: str, path: str) -> str:
 
 
 if __name__ == '__main__':
-    download_video('https://live.bilibili.com/813364?hotRank=0', '.')
+    download_video('<test url>', '.')
