@@ -56,6 +56,7 @@ var PostJob = func(c *gin.Context) {
 		jobMu.Unlock()
 		// 返回 JobID
 		rt = GetRT(0, "任务已存在", gin.H{"job_id": newJob.JobID}, newJob.URL)
+		logger.Info.Printf("[POST Job] 任务已存在: %+v.\n", newJob)
 	} else {
 		mongodb.InsertOne(newJob)
 		jobMu.Unlock()
@@ -65,6 +66,7 @@ var PostJob = func(c *gin.Context) {
 
 		// 返回 JobID
 		rt = GetRT(0, "任务已接收", gin.H{"job_id": newJob.JobID}, newJob.URL)
+		logger.Info.Printf("[POST Job] 任务已接收: %+v.\n", newJob)
 	}
 	c.JSON(http.StatusOK, rt)
 }

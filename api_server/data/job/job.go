@@ -38,6 +38,7 @@ func NewJob(dID, url string, keyWords []string) (j *Job) {
 		JobID:    getJobID(dID, url, keyWords),
 		DeviceID: dID,
 		URL:      url,
+		KeyWords: keyWords,
 	}
 	if len(keyWords) == 0 {
 		j.KeyWords = nil

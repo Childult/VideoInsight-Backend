@@ -55,6 +55,8 @@ var GetJob = func(c *gin.Context) {
 
 	// 查找数据
 	newTask := task.NewTask(jpm.URL, jpm.KeyWords)
+	logger.Debug.Printf("[GET] 查询任务:%+v.\n", newTask)
+
 	if mongodb.Exists(newTask) {
 		mongodb.FindOne(newTask)
 	} else {
@@ -125,6 +127,8 @@ var GetJobID = func(c *gin.Context) {
 	}
 
 	newTask := task.NewTask(newJob.URL, newJob.KeyWords)
+	logger.Debug.Printf("[GET] 查询任务:%+v.\n", newTask)
+
 	if mongodb.Exists(newTask) {
 		mongodb.FindOne(newTask)
 	} else {
