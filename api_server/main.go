@@ -17,7 +17,9 @@ func init() {
 
 // GinRouter 路由
 func GinRouter() (r *gin.Engine) {
-	r = gin.Default()
+	// r = gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	r = gin.New()
 
 	// 创建任务
 	r.POST("/job", job_router.PostJob)
