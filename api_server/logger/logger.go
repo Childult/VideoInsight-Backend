@@ -39,8 +39,8 @@ func init() {
 	}
 
 	// info, warning, error 对应三个日志等级, 所有消息都会倒到 debug 中
-	Info = log.New(io.MultiWriter(infoFile, debugFile), "Info:", log.LstdFlags|log.Lshortfile)
-	Warning = log.New(io.MultiWriter(warningFile, debugFile), "Warning:", log.LstdFlags|log.Lshortfile)
-	Debug = log.New(io.MultiWriter(debugFile), "Debug:", log.LstdFlags|log.Lshortfile)
+	Info = log.New(io.MultiWriter(os.Stderr, infoFile, debugFile), "Info:", log.LstdFlags|log.Lshortfile)
+	Warning = log.New(io.MultiWriter(os.Stderr, warningFile, debugFile), "Warning:", log.LstdFlags|log.Lshortfile)
+	Debug = log.New(io.MultiWriter(os.Stderr, debugFile), "Debug:", log.LstdFlags|log.Lshortfile)
 	Error = log.New(io.MultiWriter(os.Stderr, errFile, debugFile), "Error:", log.LstdFlags|log.Lshortfile)
 }
