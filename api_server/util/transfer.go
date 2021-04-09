@@ -9,7 +9,7 @@ func GetTaskStatus(status int32) string {
 		return "任务进行中"
 
 	case TaskDownloadDone:
-		return "资源下载完成, 即将开始提取摘要"
+		return "资源下载完成, 正在提取摘要"
 
 	case TaskCompleted:
 		return "任务已完成"
