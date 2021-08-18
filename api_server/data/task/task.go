@@ -37,7 +37,7 @@ func (t *Task) Coll() string {
 
 func NewTask(url string, keyWords []string) (j *Task) {
 	j = &Task{
-		TaskID:   getTaskID(url, keyWords),
+		TaskID:   getTaskID(url, nil),
 		URL:      url,
 		KeyWords: keyWords,
 		Status:   util.TaskStart,
