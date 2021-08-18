@@ -140,7 +140,6 @@ var GetJobID = func(c *gin.Context) {
 			Message: fmt.Sprintf("未找到`job_id=%s`的任务", jobID),
 			Result:  ""}
 		c.JSON(http.StatusBadRequest, rt)
-		mongodb.DeleteOne(newJob)
 		return
 	}
 
