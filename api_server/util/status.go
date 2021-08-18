@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	MongoDB     = "test"               // mongodb 数据库名称
+	MongoDB     = "swc"                // mongodb 数据库名称
 	RedisDB     = 0                    // redis 数据库号数
 	GRPCAddress = "192.168.2.80:50051" // gRPC 调用地址
 )

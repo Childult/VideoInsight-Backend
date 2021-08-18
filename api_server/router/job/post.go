@@ -52,13 +52,18 @@ var PostJob = func(c *gin.Context) {
 	// 构建任务
 	newJob := job.NewJob(jpm.DeviceID, jpm.URL, jpm.KeyWords)
 	jobMu.Lock()
+	logger.Info.Println("[POST Job] newJob", newJob)
+
 	if mongodb.Exists(newJob) {
 		jobMu.Unlock()
 		// 返回 JobID
 		rt = GetRT(0, "任务已存在", gin.H{"job_id": newJob.JobID}, newJob.URL)
 		logger.Info.Printf("[POST Job] 任务已存在: %+v.\n", newJob)
 	} else {
-		mongodb.InsertOne(newJob)
+		err := mongodb.InsertOne(newJob)
+		if err != nil {
+			logger.Info.Printf("[POST Job] job 插入失败: %+v.\n", err)
+		}
 		jobMu.Unlock()
 
 		// 开启任务

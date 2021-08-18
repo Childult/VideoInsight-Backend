@@ -113,6 +113,7 @@ var GetJobID = func(c *gin.Context) {
 	// 获取数据
 	jobID := c.Param("job_id")
 	newJob := &job.Job{JobID: jobID}
+	logger.Info.Println("[GET] newJob", newJob)
 	if mongodb.Exists(newJob) {
 		mongodb.FindOne(newJob)
 	} else {
