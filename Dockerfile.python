@@ -1,0 +1,12 @@
+FROM python:3.7.10-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && ffmpeg -version \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /swc/code /swc/log /swc/resource/compressed \
+    && pip install --no-cache-dir -r requirements.txt

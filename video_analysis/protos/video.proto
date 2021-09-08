@@ -13,6 +13,8 @@ message VideoInfo {
     string file = 2;
     // 静态视频摘要（图片）的保存目录，需确保该目录已经存在
     string save_dir = 3;
+    // 关键词
+    string key_words = 4;
 }
 
 message Result {

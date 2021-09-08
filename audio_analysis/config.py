@@ -1,4 +1,4 @@
 class Config:
     # 科大讯飞
-    app_id = 'f6a6d234'
-    secrete_key = 'fbe5dff8d8b840f3337799c52d75402f'
+    app_id = 'c72f34f2'
+    secrete_key = '0b071ddfa2ba5335be1c6be1d5b7204e'
