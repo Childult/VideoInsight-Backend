@@ -1,19 +1,19 @@
-# 提要钩玄APP后端
+# VideoInsight Backend
 
-## 目录结构
+## Project Structure
 
 - `api_server/`: RESTful API server
-- `audio_analysis/`: 音频分析模块
-- `text_analysis/`: 文本分析模块
-- `video_analysis/`: 视频分析模块
-- `video_getter/`: 视频获取模块
+- `audio_analysis/`: Audio analysis module
+- `text_analysis/`: Text analysis module
+- `video_analysis/`: Video analysis module
+- `video_getter/`: Video getter module
 
-## 启动与终止
+## Usage
 
 ```bash
-# 启动后端程序
+# launch the backend
 sh start.sh
 
-# 终止后端程序
+# terminate the backend
 sh stop.sh
 ```
